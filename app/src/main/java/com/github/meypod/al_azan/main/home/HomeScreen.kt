@@ -1,7 +1,8 @@
 package com.github.meypod.al_azan.main.home
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
+import com.github.meypod.al_azan.core.presentation.navigation.PredictableBack
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -125,7 +126,7 @@ fun HomeScreen(
         }
     }
 
-    BackHandler(enabled = drawerState.isOpen) {
+    PredictableBack(enabled = drawerState.isOpen) {
         scope.launch { drawerState.close() }
     }
 

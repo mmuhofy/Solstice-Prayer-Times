@@ -1,8 +1,7 @@
 package com.github.meypod.al_azan.intro
 
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
@@ -55,6 +54,7 @@ import com.github.meypod.al_azan.core.presentation.navigation.BindBackStackWithC
 import com.github.meypod.al_azan.core.presentation.navigation.Route
 import com.github.meypod.al_azan.core.presentation.navigation.navigateTo
 import com.github.meypod.al_azan.core.presentation.navigation.rememberHorizontalSlideDirections
+import com.github.meypod.al_azan.core.presentation.navigation.rememberNavTransitionSpecs
 import com.github.meypod.al_azan.core.presentation.navigation.rootRedirectFallback
 import com.github.meypod.al_azan.core.presentation.util.drawVerticalScrollbar
 import com.github.meypod.al_azan.core.presentation.util.fadeScrollEdges
@@ -86,7 +86,7 @@ import kotlinx.serialization.modules.polymorphic
 
 @Composable
 fun IntroNavigation(onFinishIntro: () -> Unit) {
-    val slideDirections = rememberHorizontalSlideDirections()
+    val navSpecs = rememberNavTransitionSpecs()
 
     val introBackstack =
         rememberNavBackStack(
@@ -164,34 +164,9 @@ fun IntroNavigation(onFinishIntro: () -> Unit) {
             .fillMaxSize()
             .background(introBackgroundColor),
         contentAlignment = Alignment.Center,
-        transitionSpec = {
-            slideInHorizontally(
-                animationSpec = tween(280),
-                initialOffsetX = { fullWidth -> fullWidth * slideDirections.forwardEnter },
-            ) togetherWith
-                slideOutHorizontally(
-                    animationSpec = tween(280),
-                    targetOffsetX = { fullWidth -> fullWidth * slideDirections.forwardExit / 2 },
-                )
-        },
-        popTransitionSpec = {
-            slideInHorizontally(
-                animationSpec = tween(280),
-                initialOffsetX = { fullWidth -> fullWidth * slideDirections.backEnter / 2 },
-            ) togetherWith
-                slideOutHorizontally(
-                    animationSpec = tween(280),
-                    targetOffsetX = { fullWidth -> fullWidth * slideDirections.backExit },
-                )
-        },
-        predictivePopTransitionSpec = {
-            slideInHorizontally(
-                animationSpec = tween(280),
-                initialOffsetX = { fullWidth -> fullWidth * slideDirections.backEnter / 2 },
-            ) togetherWith
-                slideOutHorizontally(
-                    animationSpec = tween(280),
-                    targetOffsetX = { fullWidth -> fullWidth * slideDirections.backExit },
+        transitionSpec = navSpecs.forwardTransform(),
+        popTransitionSpec = navSpecs.popTransform(),
+        predictivePopTransitionSpec = navSpecs.predictivePopTransform(),
                 )
         },
         entryDecorators =

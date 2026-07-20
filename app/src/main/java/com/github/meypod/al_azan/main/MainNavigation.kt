@@ -26,6 +26,7 @@ import com.github.meypod.al_azan.core.presentation.navigation.NavigationControll
 import com.github.meypod.al_azan.core.presentation.navigation.Route
 import com.github.meypod.al_azan.core.presentation.navigation.navigateTo
 import com.github.meypod.al_azan.core.presentation.navigation.rememberHorizontalSlideDirections
+import com.github.meypod.al_azan.core.presentation.navigation.rememberNavTransitionSpecs
 import com.github.meypod.al_azan.core.presentation.navigation.rootRedirectFallback
 import com.github.meypod.al_azan.main.about.AboutScreen
 import com.github.meypod.al_azan.main.about.AboutViewModel
@@ -86,6 +87,7 @@ fun MainNavigation(
     modifier: Modifier = Modifier,
 ) {
     val slideDirections = rememberHorizontalSlideDirections()
+    val navSpecs = rememberNavTransitionSpecs()
 
     val mainBackstack =
         rememberNavBackStack(
@@ -168,18 +170,9 @@ fun MainNavigation(
     NavDisplay(
         backStack = mainBackstack,
         modifier = modifier.background(MaterialTheme.colorScheme.background),
-        transitionSpec = {
-            slideInHorizontally(animationSpec = tween(280), initialOffsetX = { fw -> fw * slideDirections.forwardEnter }) togetherWith
-                slideOutHorizontally(animationSpec = tween(280), targetOffsetX = { fw -> fw * slideDirections.forwardExit / 2 })
-        },
-        popTransitionSpec = {
-            slideInHorizontally(animationSpec = tween(280), initialOffsetX = { fw -> fw * slideDirections.backEnter / 2 }) togetherWith
-                slideOutHorizontally(animationSpec = tween(280), targetOffsetX = { fw -> fw * slideDirections.backExit })
-        },
-        predictivePopTransitionSpec = {
-            slideInHorizontally(animationSpec = tween(280), initialOffsetX = { fw -> fw * slideDirections.backEnter / 2 }) togetherWith
-                slideOutHorizontally(animationSpec = tween(280), targetOffsetX = { fw -> fw * slideDirections.backExit })
-        },
+        transitionSpec = navSpecs.forwardTransform(),
+        popTransitionSpec = navSpecs.popTransform(),
+        predictivePopTransitionSpec = navSpecs.predictivePopTransform(),
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
