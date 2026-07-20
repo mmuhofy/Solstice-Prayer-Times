@@ -13,7 +13,7 @@ android {
     compileSdk { version = release(37) }
 
     defaultConfig {
-        applicationId = "com.github.meypod.al_azan"
+        applicationId = "com.solstice.prayers"
         minSdk = 26
         compileSdk = 37
         targetSdk = 36
@@ -131,6 +131,9 @@ dependencies {
 
     implementation(libs.androidx.appfunctions)
     ksp(libs.androidx.appfunctions.compiler)
+
+    implementation(project(":core-ui"))
+    implementation(project(":core-data"))
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
