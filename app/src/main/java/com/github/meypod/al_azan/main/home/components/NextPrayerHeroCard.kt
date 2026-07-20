@@ -21,11 +21,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -40,6 +40,7 @@ import com.github.meypod.al_azan.R
 import com.github.meypod.al_azan.core.domain.model.adhan.nextShariaPrayer
 import com.github.meypod.al_azan.core.domain.model.settings.SupportedLocales
 import com.github.meypod.al_azan.core.presentation.AlAzanTheme
+import com.github.meypod.al_azan.core.presentation.util.rememberReducedMotion
 import kotlinx.coroutines.delay
 import kotlin.math.min
 import kotlin.random.Random
@@ -62,13 +63,19 @@ fun NextPrayerHeroCard(
     elapsedFraction: Float,
     modifier: Modifier = Modifier,
 ) {
+    val reducedMotion = rememberReducedMotion()
     val animatedFraction by animateFloatAsState(
         targetValue = elapsedFraction.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 600),
+        animationSpec = tween(durationMillis = if (reducedMotion) 1 else 600),
         label = "next-prayer-progress",
     )
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics(mergeDescendants = true) {
+                // Polite so TalkBack doesn't interrupt the user on every tick; announce when idle.
+                liveRegion = LiveRegionMode.Polite
+            },
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
