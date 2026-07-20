@@ -136,97 +136,74 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(drawerState) {
-                Text(stringResource(R.string.app_name), modifier = Modifier.padding(dimensionResource(R.dimen.page_padding)))
+                Text(
+                    stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(
+                        horizontal = dimensionResource(R.dimen.page_padding),
+                        vertical = dimensionResource(R.dimen.element_padding),
+                    ),
+                )
                 HorizontalDivider()
-                // Scrollable so every item stays reachable when the drawer is taller than the
-                // window (e.g. landscape); the header above stays pinned.
                 Column(
                     Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
                 ) {
-                    NavigationDrawerItem(
-                        modifier = Modifier.focusRequester(firstDrawerItemFocus),
-                        icon = {
-                            Icon(painterResource(R.drawable.alarm), contentDescription = null)
-                        },
-                        label = { Text(stringResource(R.string.reminders_title)) },
-                        selected = false,
-                        onClick = {
-                            onAction(HomeUiAction.OnReminderLinkClick)
-                        },
-                    )
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(painterResource(R.drawable.compass_outline), contentDescription = null)
-                        },
-                        label = { Text(stringResource(R.string.qibla)) },
-                        selected = false,
-                        onClick = {
-                            onAction(HomeUiAction.OnQiblaLinkClick)
-                        },
-                    )
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(painterResource(R.drawable.counter), contentDescription = null)
-                        },
-                        label = { Text(stringResource(R.string.counter)) },
-                        selected = false,
-                        onClick = {
-                            onAction(HomeUiAction.OnCounterLinkClick)
-                        },
-                    )
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(painterResource(R.drawable.calendar_month_outline), contentDescription = null)
-                        },
-                        label = { Text(stringResource(R.string.monthly_view_title)) },
-                        selected = false,
-                        onClick = {
-                            onAction(HomeUiAction.OnMonthlyViewClick)
-                        },
-                    )
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(painterResource(R.drawable.settings), contentDescription = null)
-                        },
-                        label = { Text(stringResource(R.string.settings)) },
-                        selected = false,
-                        onClick = {
-                            onAction(HomeUiAction.OnSettingsLinkClick)
-                        },
-                    )
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(painterResource(R.drawable.outline_calendar_month_24), contentDescription = null)
-                        },
-                        label = { Text(stringResource(R.string.upcoming_alarms)) },
-                        selected = false,
-                        onClick = {
-                            onAction(HomeUiAction.OnUpcomingAlarmsClick)
-                        },
-                    )
-                    NavigationDrawerItem(
-                        icon = {
-                            Icon(painterResource(R.drawable.info_variant_outline), contentDescription = null)
-                        },
-                        label = { Text(stringResource(R.string.about)) },
-                        selected = false,
-                        onClick = {
-                            onAction(HomeUiAction.OnAboutLinkClick)
-                        },
-                    )
-                    if (uiState.isDeveloper) {
-                        NavigationDrawerItem(
-                            icon = {
-                                Icon(painterResource(R.drawable.outline_developer_mode_24), contentDescription = null)
-                            },
-                            label = { Text(stringResource(R.string.developer_title)) },
-                            selected = false,
-                            onClick = {
-                                onAction(HomeUiAction.OnDeveloperLinkClick)
-                            },
+                    // Apps section — main entries the user reaches while using the app.
+                    DrawerSectionLabel(stringResource(R.string.drawer_section_apps))
+                    DrawerEntries(drawerState = drawerState) {
+                        DrawerEntry(
+                            iconRes = R.drawable.alarm,
+                            label = stringResource(R.string.reminders_title),
+                            focusRequester = firstDrawerItemFocus,
+                            onClick = { onAction(HomeUiAction.OnReminderLinkClick) },
                         )
+                        DrawerEntry(
+                            iconRes = R.drawable.calendar_month_outline,
+                            label = stringResource(R.string.monthly_view_title),
+                            onClick = { onAction(HomeUiAction.OnMonthlyViewClick) },
+                        )
+                        DrawerEntry(
+                            iconRes = R.drawable.compass_outline,
+                            label = stringResource(R.string.qibla),
+                            onClick = { onAction(HomeUiAction.OnQiblaLinkClick) },
+                        )
+                        DrawerEntry(
+                            iconRes = R.drawable.counter,
+                            label = stringResource(R.string.counter),
+                            onClick = { onAction(HomeUiAction.OnCounterLinkClick) },
+                        )
+                    }
+                    // Tools section — configuration / up-next status affected by alarms.
+                    DrawerSectionLabel(stringResource(R.string.drawer_section_tools))
+                    DrawerEntries(drawerState = drawerState) {
+                        DrawerEntry(
+                            iconRes = R.drawable.outline_calendar_month_24,
+                            label = stringResource(R.string.upcoming_alarms),
+                            onClick = { onAction(HomeUiAction.OnUpcomingAlarmsClick) },
+                        )
+                        DrawerEntry(
+                            iconRes = R.drawable.settings,
+                            label = stringResource(R.string.settings),
+                            onClick = { onAction(HomeUiAction.OnSettingsLinkClick) },
+                        )
+                    }
+                    // Other section — about + conditional developer items.
+                    DrawerSectionLabel(stringResource(R.string.drawer_section_other))
+                    DrawerEntries(drawerState = drawerState) {
+                        DrawerEntry(
+                            iconRes = R.drawable.info_variant_outline,
+                            label = stringResource(R.string.about),
+                            onClick = { onAction(HomeUiAction.OnAboutLinkClick) },
+                        )
+                        if (uiState.isDeveloper) {
+                            DrawerEntry(
+                                iconRes = R.drawable.outline_developer_mode_24,
+                                label = stringResource(R.string.developer_title),
+                                onClick = { onAction(HomeUiAction.OnDeveloperLinkClick) },
+                            )
+                        }
                     }
                 }
             }
@@ -507,4 +484,53 @@ private fun HomeInitialPreview() {
             onAction = {},
         )
     }
+}
+
+/** M3 drawer section header (small label tumbnail above a group of NavigationDrawerItems). */
+@Composable
+private fun DrawerSectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(
+            start = dimensionResource(R.dimen.page_padding),
+            end = dimensionResource(R.dimen.page_padding),
+            top = dimensionResource(R.dimen.element_padding),
+            bottom = dimensionResource(R.dimen.tiny_padding),
+        ),
+    )
+}
+
+/** Renders a stacked group of drawer entries inside its own column (anchors the section label). */
+@Composable
+private fun DrawerEntries(
+    drawerState: androidx.compose.material3.DrawerState,
+    content: androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
+    Column(modifier = androidx.compose.ui.Modifier) {
+        content()
+    }
+}
+
+/** One NavigationDrawerItem — keeps icon and label rendering centralized. */
+@Composable
+private fun DrawerEntry(
+    iconRes: Int,
+    label: String,
+    onClick: () -> Unit,
+    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+    focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
+) {
+    var resolvedModifier = modifier
+    if (focusRequester != null) {
+        resolvedModifier = androidx.compose.ui.Modifier.focusRequester(focusRequester)
+    }
+    NavigationDrawerItem(
+        modifier = resolvedModifier,
+        icon = { Icon(painterResource(iconRes), contentDescription = null) },
+        label = { Text(label) },
+        selected = false,
+        onClick = onClick,
+    )
 }

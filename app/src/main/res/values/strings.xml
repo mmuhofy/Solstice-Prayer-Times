@@ -743,4 +743,9 @@
          (both already localized); this string is only the separator, so it isn't translated. -->
     <string name="reschedule_when" translatable="false">%1$s, %2$s</string>
 
+    <!-- Drawer section labels (Material 3 grouped navigation pattern). -->
+    <string name="drawer_section_apps">Apps</string>
+    <string name="drawer_section_tools">Tools</string>
+    <string name="drawer_section_other">Other</string>
+
 </resources>
