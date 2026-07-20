@@ -2,6 +2,7 @@ package com.github.meypod.al_azan.main.home
 
 import android.content.res.Configuration
 import com.github.meypod.al_azan.core.presentation.navigation.PredictableBack
+import com.github.meypod.al_azan.main.home.components.NextPrayerHeroCard
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -380,6 +381,14 @@ fun HomeScreen(
                             onLocationClick = { onAction(HomeUiAction.OnLocationTextClick) },
                             onCalculationClick = { onAction(HomeUiAction.OnCalculationLinkClick) },
                             modifier = Modifier.padding(bottom = dimensionResource(R.dimen.element_padding)),
+                        )
+                    }
+                    if (uiState.showNextPrayerCountdown && uiState.nextShariaTime != null) {
+                        NextPrayerHeroCard(
+                            countdownText = uiState.countdownText,
+                            nextPrayerLabel = uiState.nextShariaTime.prayer.i18n(),
+                            refreshTick = uiState.currentInstant,
+                            elapsedFraction = uiState.elapsedFractionOfPrayerInterval,
                         )
                     }
                     ShariaTimesBox(

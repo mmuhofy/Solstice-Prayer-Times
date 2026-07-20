@@ -318,6 +318,14 @@ class HomeViewModel
                     } else {
                         it.countdownText
                     }
+                    // Elapsed fraction of the current prayer interval: how much of the time between
+                    // the last prayer (highlighted) and the next prayer (nextShariaTime) has elapsed.
+                    // Drives the hero progress arc; fall back to 0 when the boundaries are unknown.
+                    val elapsedFraction = calculateElapsedFraction(
+                        previousPrayerTime = highlightedShariaTime?.prayerTime,
+                        nextPrayerTime = nextShariaTime?.prayerTime,
+                        now = currentInstant,
+                    )
                     updateScreenJob?.cancel()
                     updateScreenJob = viewModelScope.launch {
                         launch {
@@ -346,6 +354,7 @@ class HomeViewModel
                         showNextPrayerCountdown = settings.showHomeNextPrayerCountdown,
                         nextShariaTime = nextShariaTime,
                         countdownText = countdownText,
+                        elapsedFractionOfPrayerInterval = elapsedFraction,
                         highlightedShariaTime = highlightedShariaTime,
                         is24Hour = settings.is24HourFormat,
                         hiddenPrayers = settings.hiddenPrayers,
@@ -399,4 +408,21 @@ class HomeViewModel
             }.collect()
         }
     }
+}
+
+/**
+ * Fraction in [0f, 1f] of how much of the [previousPrayerTime, nextPrayerTime] interval has
+ * elapsed by [now]. Returns 0 before [previousPrayerTime] and clamped to 1 when the next prayer
+ * has already passed.
+ */
+private fun calculateElapsedFraction(
+    previousPrayerTime: kotlin.time.Instant?,
+    nextPrayerTime: kotlin.time.Instant?,
+    now: kotlin.time.Instant,
+): Float {
+    if (previousPrayerTime == null || nextPrayerTime == null) return 0f
+    val interval = (nextPrayerTime - previousPrayerTime).toDouble(DurationUnit.MILLISECONDS)
+    if (interval <= 0.0) return 0f
+    val elapsed = (now - previousPrayerTime).toDouble(DurationUnit.MILLISECONDS)
+    return ((elapsed / interval).toFloat()).coerceIn(0f, 1f)
 }
