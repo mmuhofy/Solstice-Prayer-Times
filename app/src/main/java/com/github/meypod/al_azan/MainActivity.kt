@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
             val initial = initialSettings ?: return@setContent
             val settings by settingsRepository.data.collectAsState(initial = initial)
 
-            AlAzanTheme(settings.themeColor, settings.displayScale) {
+            AlAzanTheme(settings.themeColor, settings.displayScale, settings.customSeedColor) {
                 NavigationRoot(
                     appIntroDone = initial.appIntroDone,
                     startingRoute = startingRoute,

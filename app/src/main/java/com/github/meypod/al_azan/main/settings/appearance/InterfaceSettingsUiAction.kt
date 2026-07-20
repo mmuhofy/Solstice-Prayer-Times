@@ -15,6 +15,10 @@ sealed interface InterfaceSettingsUiAction {
         val value: ThemeColor,
     ) : InterfaceSettingsUiAction
 
+    data class OnCustomSeedColorChange(
+        val value: Int?,
+    ) : InterfaceSettingsUiAction
+
     data class OnDisplayScaleChange(
         val value: Float,
     ) : InterfaceSettingsUiAction

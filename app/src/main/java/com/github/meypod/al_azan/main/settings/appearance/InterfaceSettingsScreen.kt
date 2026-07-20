@@ -56,6 +56,7 @@ import com.github.meypod.al_azan.core.presentation.LightSecondaryContainer
 import com.github.meypod.al_azan.core.presentation.components.ACard
 import com.github.meypod.al_azan.core.presentation.components.BottomSelect
 import com.github.meypod.al_azan.core.presentation.components.CheckboxTable
+import com.github.meypod.al_azan.core.presentation.components.ColorPickerField
 import com.github.meypod.al_azan.core.presentation.components.LocalSnackbarController
 import com.github.meypod.al_azan.core.presentation.components.PrayerCheckboxTable
 import com.github.meypod.al_azan.core.presentation.components.ScreenScaffold
@@ -237,6 +238,55 @@ private fun ThemesCard(
             SettingLabel(stringResource(R.string.themes), fontWeight = FontWeight.Medium)
             ThemeGrid(uiState.settings.themeColor) { theme ->
                 onAction(InterfaceSettingsUiAction.OnThemeChange(theme))
+            }
+            CustomSeedColorRow(
+                seedColor = uiState.settings.customSeedColor,
+                themeColor = uiState.settings.themeColor,
+                onAction = onAction,
+            )
+        }
+    }
+}
+
+/**
+ * Lets the user pick a custom seed color that overrides Material You accents when the active theme
+ * is [ThemeColor.Dynamic] or [ThemeColor.Default] (the two modes that use the dynamic scheme on
+ * Android 12+). A clear button restores the OS dynamic scheme.
+ */
+@Composable
+private fun CustomSeedColorRow(
+    seedColor: Int?,
+    themeColor: ThemeColor,
+    onAction: (InterfaceSettingsUiAction) -> Unit,
+) {
+    // Only show for Default and Dynamic: the static Light/Dark/Classic/AMOLED schemes are not
+    // derived from a seed color, so this row would be misleading there.
+    val eligible = themeColor == ThemeColor.Default || themeColor == ThemeColor.Dynamic
+    if (!eligible) return
+    val defaultSeedArgb = 0xFF00696C.toInt() // matches the primary accent of the static schemes
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        SettingLabel(stringResource(R.string.custom_seed_color), fontWeight = FontWeight.Normal)
+        Text(
+            stringResource(R.string.custom_seed_color_help),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ColorPickerField(
+                label = if (seedColor == null) "" else stringResource(R.string.custom_seed_color),
+                colorArgb = seedColor,
+                defaultArgb = defaultSeedArgb,
+                onColorChanged = { onAction(InterfaceSettingsUiAction.OnCustomSeedColorChange(it)) },
+                modifier = Modifier.weight(1f),
+            )
+            if (seedColor != null) {
+                TextButton(onClick = { onAction(InterfaceSettingsUiAction.OnCustomSeedColorChange(null)) }) {
+                    Text(stringResource(R.string.custom_seed_color_clear))
+                }
             }
         }
     }
@@ -476,6 +526,7 @@ private fun ThemeGrid(
         ThemeColor.Default to Triple(R.string.theme_system_default, Color.Transparent, false),
         ThemeColor.Light to Triple(R.string.theme_light, LightSecondaryContainer, false),
         ThemeColor.Dark to Triple(R.string.theme_dark, DarkSurface, false),
+        ThemeColor.Amoled to Triple(R.string.theme_amoled, Color(0xFF000000), false),
         ThemeColor.ClassicDark to Triple(R.string.theme_classic_black, Color.Black, false),
         ThemeColor.ClassicLight to Triple(R.string.theme_classic_light, Color.White, false),
         ThemeColor.Dynamic to Triple(R.string.theme_dynamic, Color(0xFFB3A3F5), false),

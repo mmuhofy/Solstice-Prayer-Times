@@ -228,6 +228,10 @@
     <string name="theme_classic_light">Classic Light</string>
     <string name="theme_system_default">System Default</string>
     <string name="theme_dynamic">Dynamic</string>
+    <string name="theme_amoled">AMOLED Black</string>
+    <string name="custom_seed_color">Custom seed color</string>
+    <string name="custom_seed_color_help">Override Material You accents with a custom seed color. Works with Dynamic and System Default themes on Android 12+.</string>
+    <string name="custom_seed_color_clear">Clear custom color</string>
     <string name="countdown_timer">Home countdown timer</string>
     <string name="countdown_timer_help">Show time remaining to next prayer on the home screen.</string>
     <string name="countdown_skip_non_prayers">Count down to prayers only</string>

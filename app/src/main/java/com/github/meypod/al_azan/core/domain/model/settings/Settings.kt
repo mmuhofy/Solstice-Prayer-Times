@@ -107,6 +107,12 @@ fun getDefaultAdhanEntries(): List<AudioEntry.ResourceAudioEntry> =
 data class Settings(
     val deliveredAlarmTimestamps: Map<String, Long?> = emptyMap(),
     val themeColor: ThemeColor = ThemeColor.Default,
+    /**
+     * Optional user-picked ARGB seed color applied on top of [themeColor] when it equals
+     * [ThemeColor.Dynamic] (Material You override) or [ThemeColor.Default] (pre-Android 12 fallback).
+     * Null disables the custom seed; on Android 12+ the OS dynamic scheme wins unless this is set.
+     */
+    val customSeedColor: Int? = null,
     val is24HourFormat: Boolean = true,
     /** App-wide UI scale multiplier (text + interface) applied on top of the system density. 1f = no change. */
     val displayScale: Float = 1f,
@@ -296,6 +302,9 @@ enum class ThemeColor {
     @SerialName("dark")
     Dark,
 
+    @SerialName("amoled")
+    Amoled,
+
     @SerialName("classic_light")
     ClassicLight,
 
@@ -313,10 +322,12 @@ enum class ThemeColor {
             else -> false
         }
 
+    fun isAmoled(): Boolean = this == Amoled
+
     @Composable
     fun isDark(): Boolean =
         when (this) {
-            ClassicDark, Dark -> true
+            ClassicDark, Dark, Amoled -> true
             Dynamic -> isSystemInDarkTheme()
             else -> false
         }

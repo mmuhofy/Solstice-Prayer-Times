@@ -3,6 +3,7 @@ package com.github.meypod.al_azan.core.presentation
 import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -12,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -54,6 +57,25 @@ private val DarkColorScheme = darkColorScheme(
     surfaceContainerHigh = DarkSurfaceContainerHigh,
     surfaceContainerLowest = DarkSurfaceContainerLowest,
     surfaceContainerHighest = DarkSurfaceContainerHighest,
+)
+// AMOLED variant: pure black background and surfaces, copy colors otherwise identical to the
+// standard dark scheme so accents/tertiary/error retain proper M3 contrast against true black.
+private val AmoledColorScheme = DarkColorScheme.copy(
+    background = Color(0xFF000000),
+    onBackground = Color(0xFFE0E0E0),
+    surface = Color(0xFF000000),
+    onSurface = Color(0xFFE0E0E0),
+    surfaceVariant = Color(0xFF1A1A1A),
+    onSurfaceVariant = Color(0xFFBDBDBD),
+    surfaceTint = DarkPrimary,
+    surfaceContainerLowest = Color(0xFF000000),
+    surfaceContainerLow = Color(0xFF080808),
+    surfaceContainer = Color(0xFF0F0F0F),
+    surfaceContainerHigh = Color(0xFF161616),
+    surfaceContainerHighest = Color(0xFF1D1D1D),
+    inverseSurface = Color(0xFFE6E6E6),
+    inverseOnSurface = Color(0xFF1A1A1A),
+    scrim = Color(0xFF000000),
 )
 val LightColorScheme = lightColorScheme(
     primary = LightPrimary,
@@ -174,15 +196,25 @@ private val DarkHighContrastColorScheme = darkColorScheme(
 fun AlAzanTheme(
     themeColor: ThemeColor = ThemeColor.Default,
     displayScale: Float = 1f,
+    customSeedColor: Int? = null,
     content: @Composable () -> Unit,
 ) {
     val systemDarkTheme = isSystemInDarkTheme()
     val darkTheme = when (themeColor) {
         ThemeColor.Light, ThemeColor.ClassicLight -> false
-        ThemeColor.Dark, ThemeColor.ClassicDark -> true
+        ThemeColor.Dark, ThemeColor.ClassicDark, ThemeColor.Amoled -> true
         ThemeColor.Dynamic, ThemeColor.Default -> systemDarkTheme
     }
     val colorScheme = when {
+        // Dynamic with custom seed: OS dynamic scheme is overridden by the user-supplied seed on M3
+        //佼 capable devices (Android 12+) by remapping primary/primaryContainer/secondary/tertiary及其
+        // tonal derivatives. Pre-S falls through to the static Light/Dark schemes.
+        themeColor == ThemeColor.Dynamic && customSeedColor != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            val base = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            base.withCustomSeed(customSeedColor, darkTheme)
+        }
+
         themeColor == ThemeColor.Dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             val dynamic = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -191,11 +223,19 @@ fun AlAzanTheme(
             dynamic.copy(surface = dynamic.surfaceContainer)
         }
 
+        themeColor == ThemeColor.Default && customSeedColor != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            val base = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            base.withCustomSeed(customSeedColor, darkTheme)
+        }
+
         else ->
             when (themeColor) {
                 ThemeColor.Light -> LightColorScheme
 
                 ThemeColor.Dark -> DarkColorScheme
+
+                ThemeColor.Amoled -> if (darkTheme) AmoledColorScheme else LightColorScheme
 
                 ThemeColor.ClassicLight -> LightHighContrastColorScheme
 
@@ -240,4 +280,30 @@ fun AlAzanTheme(
     ) {
         CompositionLocalProvider(LocalDensity provides scaledDensity, content = content)
     }
+}
+
+/**
+ * Applies a user-supplied seed color to a Material 3 [ColorScheme] by blending the primary,
+ * primaryContainer, secondary/tertiary counterparts toward the seed's tone. This is a pragmatic
+ * approximation of the M3 HCT-based tonal palette (which is unavailable outside of
+ * `dynamic*ColorScheme`); for the vast majority of seed colors it gives a pleasing, on-brand result
+ * while keeping the rest of the dynamic scheme (background, surfaces, error) intact.
+ */
+private fun ColorScheme.withCustomSeed(seedArgb: Int, dark: Boolean): ColorScheme {
+    val seed = Color(seedArgb)
+    val targetPrimary = if (dark) seed.copy(alpha = 1f) else lerp(seed, Color.White, 0.05f)
+    val targetPrimaryContainer = if (dark) lerp(seed, Color.Black, 0.4f) else lerp(seed, Color.White, 0.7f)
+    val targetSecondary = lerp(seed, Color(0xFF6E7979), 0.4f)
+    val targetTertiary = lerp(seed, Color(0xFFECC622), 0.5f)
+    return copy(
+        primary = targetPrimary,
+        onPrimary = if (dark) Color(0xFF003738) else Color.White,
+        primaryContainer = targetPrimaryContainer,
+        onPrimaryContainer = if (dark) Color.White else Color(0xFF002728),
+        secondary = targetSecondary,
+        secondaryContainer = if (dark) lerp(targetSecondary, Color.Black, 0.4f) else lerp(targetSecondary, Color.White, 0.7f),
+        tertiary = targetTertiary,
+        surfaceTint = targetPrimary,
+        inversePrimary = if (dark) lerp(seed, Color.White, 0.2f) else seed,
+    )
 }
