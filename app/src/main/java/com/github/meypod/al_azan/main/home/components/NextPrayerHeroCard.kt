@@ -37,7 +37,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.github.meypod.al_azan.R
-import com.github.meypod.al_azan.core.domain.model.adhan.nextShariaPrayer
 import com.github.meypod.al_azan.core.domain.model.settings.SupportedLocales
 import com.github.meypod.al_azan.core.presentation.AlAzanTheme
 import com.github.meypod.al_azan.core.presentation.util.rememberReducedMotion

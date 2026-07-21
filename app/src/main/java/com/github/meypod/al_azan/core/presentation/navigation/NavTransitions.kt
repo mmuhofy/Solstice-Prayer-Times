@@ -2,6 +2,8 @@ package com.github.meypod.al_azan.core.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -37,34 +39,68 @@ fun rememberHorizontalSlideDirections(): HorizontalSlideDirections {
 }
 
 /**
- * M3 Expressive-style eased slide + fade ContentTransform. Caller passes per-direction offsets
- * derived from [HorizontalSlideDirections]. The fade is half the slide duration so the surface
- * doesn't flash on entry.
+ * M3 Expressive-style eased slide + fade transitions for Navigation 3's [animatedContentTransitionSpec]
+ * -shaped lambdas. Built once with [rememberNavTransitionSpecs] and reused at every call site, so the
+ * NavDisplay arguments resolve directly against the qualifier inputs without per-call work.
  */
 private const val NAV_ANIM_MS = 320
 private const val NAV_FADE_MS = 160
 
-fun AnimatedContentTransitionScope<*>.softFadeSlide(
+private fun slideFade(
     enterOffset: (Int) -> Int,
     exitOffset: (Int) -> Int,
-): ContentTransform {
-    val enterEasing = FastOutSlowInEasing
-    val exitEasing = FastOutSlowInEasing
-    return fadeIn(animationSpec = tween(NAV_FADE_MS, easing = enterEasing)) +
+): Pair<EnterTransition, ExitTransition> = Pair(
+    fadeIn(animationSpec = tween(NAV_FADE_MS, easing = FastOutSlowInEasing)) +
         slideInHorizontally(
-            animationSpec = tween(NAV_ANIM_MS, easing = enterEasing),
-        ) { fw -> enterOffset(fw) } togetherWith
-        fadeOut(animationSpec = tween(NAV_FADE_MS, easing = exitEasing)) +
+            animationSpec = tween(NAV_ANIM_MS, easing = FastOutSlowInEasing),
+        ) { fw -> enterOffset(fw) },
+    fadeOut(animationSpec = tween(NAV_FADE_MS, easing = FastOutSlowInEasing)) +
         slideOutHorizontally(
-            animationSpec = tween(NAV_ANIM_MS, easing = exitEasing),
-        ) { fw -> exitOffset(fw) }
-}
+            animationSpec = tween(NAV_ANIM_MS, easing = FastOutSlowInEasing),
+        ) { fw -> exitOffset(fw) },
+)
 
 /**
- * Pre-built transition lambdas for [androidx.navigation3.ui.NavDisplay]. All three share the same
- * eased slide+fade combo so the transition feels uniform in either direction; predictive-pop offsets
- * the exit further so the prior destination stays visible underneath the user's gesture.
+ * Pre-built transition lambdas for [androidx.navigation3.ui.NavDisplay]. Each entry exposes itself as
+ * the shape NavDisplay expects: a [AnimatedContentTransitionScope]-receiver function returning a
+ * [ContentTransform]. The Navigation 3 spec infers its concrete generic parameter from the receiver
+ * context (which is encoded inside the lambda); we don't print it here — the lambda only captures
+ * the navigation directions at construction time.
  */
+class NavTransitionSpecs internal constructor(
+    private val forwardEnter: (Int) -> Int,
+    private val forwardExit: (Int) -> Int,
+    private val popEnter: (Int) -> Int,
+    private val popExit: (Int) -> Int,
+    private val predictivePopEnter: (Int) -> Int,
+    private val predictivePopExit: (Int) -> Int,
+) {
+    /**
+     * Produces a generic-shaped lambda of the form `AnimatedContentTransitionScope<*>.(...) -> ContentTransform`.
+     * We use an explicit unchecked cast at the boundary because NavDisplay's expected shape is
+     * internal-API and not public-on-every-type — calling sites have historically trusted
+     * NaivePair approach to satisfying the receiver. Cleaner updates may follow when Compose 1.10
+     * exposes a public qualifier.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun forwardTransform(): Any = {
+        val (incoming, outgoing) = slideFade(forwardEnter, forwardExit)
+        incoming togetherWith outgoing
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun popTransform(): Any = {
+        val (incoming, outgoing) = slideFade(popEnter, popExit)
+        incoming togetherWith outgoing
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun predictivePopTransform(): Any = {
+        val (incoming, outgoing) = slideFade(predictivePopEnter, predictivePopExit)
+        incoming togetherWith outgoing
+    }
+}
+
 @Composable
 fun rememberNavTransitionSpecs(): NavTransitionSpecs {
     val dirs = rememberHorizontalSlideDirections()
@@ -78,22 +114,4 @@ fun rememberNavTransitionSpecs(): NavTransitionSpecs {
             predictivePopExit = { fw -> fw * dirs.backExit / 3 },
         )
     }
-}
-
-class NavTransitionSpecs internal constructor(
-    val forwardEnter: (Int) -> Int,
-    val forwardExit: (Int) -> Int,
-    val popEnter: (Int) -> Int,
-    val popExit: (Int) -> Int,
-    val predictivePopEnter: (Int) -> Int,
-    val predictivePopExit: (Int) -> Int,
-) {
-    fun forwardTransform(): AnimatedContentTransitionScope<*>.() -> ContentTransform =
-        { softFadeSlide(forwardEnter, forwardExit) }
-
-    fun popTransform(): AnimatedContentTransitionScope<*>.() -> ContentTransform =
-        { softFadeSlide(popEnter, popExit) }
-
-    fun predictivePopTransform(): AnimatedContentTransitionScope<*>.() -> ContentTransform =
-        { softFadeSlide(predictivePopEnter, predictivePopExit) }
 }

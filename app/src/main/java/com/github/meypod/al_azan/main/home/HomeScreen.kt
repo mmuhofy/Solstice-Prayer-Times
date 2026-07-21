@@ -363,7 +363,9 @@ fun HomeScreen(
                     if (uiState.showNextPrayerCountdown && uiState.nextShariaTime != null) {
                         NextPrayerHeroCard(
                             countdownText = uiState.countdownText,
-                            nextPrayerLabel = uiState.nextShariaTime.prayer.i18n(),
+                            nextPrayerLabel = com.github.meypod.al_azan.core.domain.model.adhan.i18n(
+                                uiState.nextShariaTime.prayer
+                            ),
                             refreshTick = uiState.currentInstant,
                             elapsedFraction = uiState.elapsedFractionOfPrayerInterval,
                         )

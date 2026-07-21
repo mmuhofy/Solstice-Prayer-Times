@@ -1,8 +1,6 @@
 package com.github.meypod.al_azan.core.presentation.util
 
-import android.app.AccessibilityManager
-import android.content.Context
-import android.os.Build
+import android.provider.Settings
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -13,12 +11,11 @@ import androidx.compose.ui.platform.LocalContext
 
 /**
  * Returns true when the OS reports the user has either enabled a system-wide "reduce animations"
- * preference (Android 9+ via [AccessibilityManager.areAnimationsDisabled]) or turned off all
- * transition animations at the system level (Android 11+ via
- * [AccessibilityManager.isAnimationOn]).
+ * preference or turned off transition animations. Surfaced through [Settings.Global.ANIMATOR_DURATION_SCALE]
+ * (a value of 0 means "animations disabled" — used by the system since API 17).
  *
- * Used to swap build-flagged animations for instant or faster transitions so users who have
- * requested reduced motion aren't subjected to e.g. progress arcs or slide+fade navigation.
+ * Compose-side helpers use this to short-circuit long animations so users who have requested
+ * reduced motion aren't subjected to e.g. progress arcs or slide+fade navigation.
  */
 @Composable
 fun rememberReducedMotion(): Boolean {
@@ -26,22 +23,21 @@ fun rememberReducedMotion(): Boolean {
     return remember(context) { isReducedMotion(context) }
 }
 
-private fun isReducedMotion(context: Context): Boolean {
-    val am = context.applicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
-        ?: return false
-    // Available since Android 9 (Q): user has explicitly disabled animation globally.
-    if (am.areAnimationsDisabled()) return true
-    // Available since Android 11: explicit "animation off" preference. When false, motion is
-    // allowed; when true, motion is suppressed and we should shrink durations.
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !am.isAnimationOn()) return true
-    return false
+private fun isReducedMotion(context: android.content.Context): Boolean {
+    val scale = Settings.Global.getFloat(
+        context.contentResolver,
+        Settings.Global.ANIMATOR_DURATION_SCALE,
+        1f,
+    )
+    // 0 means animations are off system-wide; anything < 0.5 means significantly slowed.
+    return scale < 0.5f
 }
 
 /** Replace any animation spec with an "instant" one when motion is reduced; otherwise pass through. */
 @Composable
-fun <T, V : AnimationVector> AnimationSpec<T>.reduceMotionIfNeeded(
+fun AnimationSpec<*>.reduceMotionIfNeeded(
     reducedMotion: Boolean = rememberReducedMotion(),
-): AnimationSpec<T> =
+): AnimationSpec<*> =
     if (reducedMotion) tween(durationMillis = 1, easing = FastOutSlowInEasing) else this
 
 /**
