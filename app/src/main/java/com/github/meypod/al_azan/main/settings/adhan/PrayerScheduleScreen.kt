@@ -22,6 +22,7 @@ import com.github.meypod.al_azan.core.domain.model.adhan.i18n
 import com.github.meypod.al_azan.core.domain.model.adhan.toAdhanKey
 import com.github.meypod.al_azan.core.domain.model.alarm.VibrationMode
 import com.github.meypod.al_azan.core.domain.model.settings.AudioEntry
+import com.github.meypod.al_azan.core.domain.model.settings.AdhanCategory
 import com.github.meypod.al_azan.core.domain.model.settings.NOTIFICATION_AUDIO_ID
 import com.github.meypod.al_azan.core.domain.model.settings.SILENT_AUDIO_ID
 import com.github.meypod.al_azan.core.domain.model.settings.isResolvable
@@ -67,15 +68,34 @@ fun PrayerScheduleScreen(
     val defaultLabel = stringResource(R.string.use_default_muezzin)
     val labelFn = audioEntryLabel()
     val userIds = uiState.settings.savedUserAudioEntries.map { it.id }.toSet()
-    val muezzinSections = listOf<AudioPickerSection<AudioEntry?>>(
-        AudioPickerSection(
-            null,
-            listOf<AudioEntry?>(null, mapAdhanIdToEntry(NOTIFICATION_AUDIO_ID), mapAdhanIdToEntry(SILENT_AUDIO_ID)),
-        ),
-        AudioPickerSection(stringResource(R.string.muezzin), uiState.settings.savedAdhanAudioEntries),
-        AudioPickerSection(stringResource(R.string.your_sounds), uiState.settings.savedUserAudioEntries),
-        AudioPickerSection(stringResource(R.string.device_sounds), uiState.deviceSounds),
-    )
+
+    val mosquesLabel = stringResource(R.string.adhan_category_mosques)
+    val muezzinsLabel = stringResource(R.string.adhan_category_muezzins)
+    val stylesLabel = stringResource(R.string.adhan_category_styles)
+    val yourSoundsLabel = stringResource(R.string.your_sounds)
+    val deviceSoundsLabel = stringResource(R.string.device_sounds)
+    val byCategory = uiState.settings.savedAdhanAudioEntries
+        .filterIsInstance<AudioEntry.ResourceAudioEntry>()
+        .groupBy { it.category ?: AdhanCategory.Mosques }
+    val muezzinSections = buildList<AudioPickerSection<AudioEntry?>> {
+        add(
+            AudioPickerSection(
+                null,
+                listOf<AudioEntry?>(null, mapAdhanIdToEntry(NOTIFICATION_AUDIO_ID), mapAdhanIdToEntry(SILENT_AUDIO_ID)),
+            ),
+        )
+        byCategory[AdhanCategory.Mosques]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(mosquesLabel, it))
+        }
+        byCategory[AdhanCategory.Muezzins]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(muezzinsLabel, it))
+        }
+        byCategory[AdhanCategory.Styles]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(stylesLabel, it))
+        }
+        add(AudioPickerSection(yourSoundsLabel, uiState.settings.savedUserAudioEntries))
+        add(AudioPickerSection(deviceSoundsLabel, uiState.deviceSounds))
+    }
 
     val rowState = AdhanScheduleRowUiState.fromPrayerAlarmSettings(
         prayer,
