@@ -26,7 +26,14 @@ A modern, open-source Adhan (أذان) — prayer times application, built nativ
 
 * You can search for your location offline Or use GPS
 
-* Set custom Adhan audio, or pick any sound from your device
+* **25+ bundled adhan recitations** organised by category (Mosques / Muezzins / Styles).
+  Add custom audio or pick any sound from your device.
+
+* **Adaptive navigation** — Navigation rail on tablets, bottom bar on phones
+
+* **AMOLED true-black theme** for OLED battery savings
+
+* **Custom seed color** override for Material You accents
 
 * Select different Adhan audio for Fajr namaz
 
@@ -34,7 +41,7 @@ A modern, open-source Adhan (أذان) — prayer times application, built nativ
 
 * Many options for Adhan (اذان) calculation
 
-* Light and Dark theme, with Material You dynamic colors
+* Light, Dark, AMOLED Black and Classic themes, with Material You dynamic colors
 
 * Monthly prayer times view
 
