@@ -1,8 +1,9 @@
-name: Release build
+name: Release APK
 
-# Builds + signs a release on tag push (`v*`) or manual dispatch, then attaches
-# a universal APK and per-ABI APKs to the GitHub release. F-Droid metadata is
-# generated separately by the f-droid metadata workflow.
+# Builds + signs release APKs on tag push (`v*`) or manual dispatch, then attaches
+# the signed APKs (universal + per-ABI) to a GitHub release. APK-only — no
+# Android App Bundle / Play Store target (fork's primary distribution is
+# F-Droid, GitHub releases, and user-side sideloading).
 on:
   push:
     tags:
@@ -30,7 +31,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build, sign, and attach artifacts
+    name: Build, sign, and attach APKs
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -39,16 +40,9 @@ jobs:
         run: |
           set -euo pipefail
           REF="${{ inputs.ref }}"
-          if [ -z "${REF:-}" ]; then
-            if [ "${{ github.event_name }}" = "push" ]; then
-              REF="${{ github.ref }}"
-            else
-              REF="${{ github.ref }}"
-            fi
-          fi
-          # Trim refs/tags/<x> or refs/heads/<x> -> <x>
           case "$REF" in
             refs/tags/*|refs/heads/*) REF="${REF#refs/*/}" ;;
+            '') REF="${{ github.ref_name }}" ;;
           esac
           echo "value=$REF" >> "$GITHUB_OUTPUT"
 
@@ -66,46 +60,40 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          # Use the wrapper version pinned in the repo, not whatever GitHub happens to cache.
           gradle-version: wrapper
 
       - name: Compute release coords from version info
         id: version
         run: |
           set -euo pipefail
-          # Extract versionName + base versionCode from app/build.gradle.kts.
-          # versionCode in app/build.gradle.kts is the logical code; the build multiplies it by
-          # 1000 via AGP variant API, so the on-device code we report back reflects that.
           vn=$(awk -F\" '/versionName/{print $2; exit}' app/build.gradle.kts)
           vc=$(awk -F' *= *' '/versionCode[[:space:]]*=/{print $2; exit}' app/build.gradle.kts | tr -d ' ')
           echo "versionName=$vn" >> "$GITHUB_OUTPUT"
           echo "versionCode=$vc" >> "$GITHUB_OUTPUT"
           echo "versionCodeArtifact=$((vc * 1000))" >> "$GITHUB_OUTPUT"
 
-      - name: Build AAB (Play Store)
-        run: ./gradlew --no-daemon :app:bundleRelease --stacktrace
-
-      - name: Assemble APKs (universal + per-ABI)
+      - name: Assemble release APKs (universal + per-ABI)
         run: ./gradlew --no-daemon :app:assembleRelease --stacktrace
 
-      - name: Stage artifacts with friendly names
+      - name: Stage APKs with friendly names
         working-directory: app/build/outputs
         run: |
           set -euo pipefail
-          DERIVED_VERSION="${{ steps.version.outputs.versionName }}"
-          DERIVED_VC="${{ steps.version.outputs.versionCode }}"
-
-          # APK set: universal + per-ABI files (asset ordering is best-effort).
-          declare -a APK_FILES=()
-          while IFS= read -r f; do APK_FILES+=("$f"); done < <(find apk/release -maxdepth 2 -type f -name '*.apk' | sort)
-          echo "Found ${#APK_FILES[@]} APK(s):"
-          printf '  %s\n' "${APK_FILES[@]}"
+          shopt -s nullglob
+          VN="${{ steps.version.outputs.versionName }}"
+          VC="${{ steps.version.outputs.versionCode }}"
 
           mkdir -p staging/apk
-          for f in "${APK_FILES[@]}"; do
-            rel=${f#apk/release/}        # e.g. "release/app-universal-release.apk"
-            base=$(basename "$rel" .apk) # "app-universal-release"
-            # Drop the trailing "-release" so universal/per-ABI variants name cleanly.
+          pkgs=()
+          while IFS= read -r f; do pkgs+=("$f"); done < <(find apk/release -maxdepth 2 -type f -name '*.apk' | sort)
+          if [ "${#pkgs[@]}" -eq 0 ]; then
+            echo "No APKs found in apk/release" >&2
+            exit 1
+          fi
+          echo "Found ${#pkgs[@]} APK(s)"
+          for f in "${pkgs[@]}"; do
+            rel=${f#apk/release/}
+            base=$(basename "$rel" .apk)
             safe=${base%-release}
             arch="-universal"
             case "$safe" in
@@ -114,21 +102,10 @@ jobs:
               *x86_64*) arch="-x86_64" ;;
               *x86*) arch="-x86" ;;
             esac
-            dst="staging/apk/solstice-prayer-times--${DERIVED_VERSION}-${safe%-universal*}${arch}-${DERIVED_VC}.apk"
+            dst="staging/apk/solstice-prayer-times--${VN}${arch}-${VC}.apk"
             mv "$f" "$dst"
             echo "APK: $dst"
           done
-
-          # AAB set: typically a single output.
-          mkdir -p staging/aab
-          while IFS= read -r f; do
-            rel=${f#bundle/release/}
-            base=$(basename "$rel" .aab)
-            safe=${base%-release}
-            dst="staging/aab/solstice-prayer-times--${DERIVED_VERSION}-${safe}-${DERIVED_VC}.aab"
-            mv "$f" "$dst"
-            echo "AAB: $dst"
-          done < <(find bundle/release -maxdepth 2 -type f -name '*.aab' | sort)
 
       - name: Sign APKs
         uses: r0adkll/sign-android-release@v1
@@ -141,35 +118,37 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: '36.0.0'
 
-      - name: Sign AAB
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: app/build/outputs/staging/aab
-          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-          alias: ${{ secrets.ANDROID_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: '36.0.0'
-
       - name: Verify signed artifacts
         working-directory: app/build/outputs/staging
         run: |
           set -euo pipefail
           shopt -s nullglob
-          test -n "$(echo apk/*.apk)" || { echo "No signed APKs found" >&2; exit 1; }
-          ls -la apk aab
+          test -n "$(echo apk/*-signed.apk 2>/dev/null)" || {
+            echo "No signed APKs found" >&2; exit 1;
+          }
+          ls -la apk
+
+      - name: Drop the unsig APK copies, keep -signed.apk only
+        working-directory: app/build/outputs/staging/apk
+        run: |
+          set -euo pipefail
+          for f in *.apk; do
+            case "$f" in
+              *-signed.apk) ;;
+              *) rm -f "$f" ;;
+            esac
+          done
+          ls -la
 
       - name: Determine release tag
         id: tag
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "push" ]; then
-            # github.ref looks like refs/tags/vX.Y.Z under tag push.
             REF="${{ github.ref }}"
             case "$REF" in
               refs/tags/*) echo "value=${REF#refs/tags/}" >> "$GITHUB_OUTPUT" ;;
-              *) echo "value=$(echo "$REF" | tr '/.' '__')" >> "$GITHUB_OUTPUT" ;;
+              *) echo "value=manual-$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT" ;;
             esac
           else
             INPUT_TAG="${{ inputs.tag_name }}"
@@ -188,23 +167,19 @@ jobs:
           generate_release_notes: true
           draft: true
           fail_on_unmatched_files: true
-          files: |
-            app/build/outputs/staging/apk/*.apk
-            app/build/outputs/staging/aab/*.aab
+          files: app/build/outputs/staging/apk/*.apk
 
-      - name: Upload artifacts (workflow_dispatch only)
+      - name: Upload artifacts (workflow_dispatch only, no release)
         if: ${{ github.event_name != 'push' && inputs.create_release == 'false' }}
         uses: actions/upload-artifact@v4
         with:
-          name: signed-release-artifacts
-          path: |
-            app/build/outputs/staging/apk/*.apk
-            app/build/outputs/staging/aab/*.aab
+          name: signed-release-apks
+          path: app/build/outputs/staging/apk/*.apk
           if-no-files-found: error
 
       - name: Summary
         run: |
-          echo "### Release build complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Release APK build complete" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           vn=$(awk -F\" '/versionName/{print $2; exit}' app/build.gradle.kts)
           vc=$(awk -F' *= *' '/versionCode[[:space:]]*=/{print $2; exit}' app/build.gradle.kts | tr -d ' ')
@@ -216,11 +191,10 @@ jobs:
           while IFS= read -r f; do
             size=$(du -h "$f" | cut -f1)
             echo "| \`$(basename "$f")\` | $size |" >> "$GITHUB_STEP_SUMMARY"
-          done < <(find app/build/outputs/staging -type f \( -name '*.apk' -o -name '*.aab' \) | sort)
+          done < <(find app/build/outputs/staging -type f -name '*-signed.apk' | sort)
 
   build-debug-apk:
     name: Debug APK sanity check
-    # Cheap smoke test: assemble debug to catch configuration rot ahead of release work.
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' }}
     steps:
@@ -241,8 +215,8 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
-  lint-and-detekt:
-    name: Static checks
+  lint-and-tests:
+    name: Static checks + unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -253,10 +227,8 @@ jobs:
           distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-      # Gradle `:app:check` already envelops our `banMutableCollectionTypes` task. Detekt isn't wired
-      # into the repo yet; we fall back to lint and the :app:check task for now.
-      - name: Run lint
+      - name: Run lint + :app:check (incl. banMutableCollectionTypes)
         run: ./gradlew --no-daemon :app:check -x test
-      - name: Run unit tests (best-effort)
+      - name: Run release unit tests (best-effort)
         continue-on-error: true
         run: ./gradlew --no-daemon :app:testReleaseUnitTest
