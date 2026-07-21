@@ -6,12 +6,10 @@ import android.os.Build
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.getSystemService
 
 /**
  * Returns true when the OS reports the user has either enabled a system-wide "reduce animations"
@@ -29,7 +27,8 @@ fun rememberReducedMotion(): Boolean {
 }
 
 private fun isReducedMotion(context: Context): Boolean {
-    val am = context.applicationContext.getSystemService<AccessibilityManager>() ?: return false
+    val am = context.applicationContext.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+        ?: return false
     // Available since Android 9 (Q): user has explicitly disabled animation globally.
     if (am.areAnimationsDisabled()) return true
     // Available since Android 11: explicit "animation off" preference. When false, motion is

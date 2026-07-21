@@ -6,6 +6,9 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -41,18 +44,18 @@ fun rememberHorizontalSlideDirections(): HorizontalSlideDirections {
 private const val NAV_ANIM_MS = 320
 private const val NAV_FADE_MS = 160
 
-fun AnimatedContentTransitionScope<Any?>.softFadeSlide(
+fun AnimatedContentTransitionScope<*>.softFadeSlide(
     enterOffset: (Int) -> Int,
     exitOffset: (Int) -> Int,
 ): ContentTransform {
     val enterEasing = FastOutSlowInEasing
     val exitEasing = FastOutSlowInEasing
     return fadeIn(animationSpec = tween(NAV_FADE_MS, easing = enterEasing)) +
-        androidx.compose.animation.slideInHorizontally(
+        slideInHorizontally(
             animationSpec = tween(NAV_ANIM_MS, easing = enterEasing),
         ) { fw -> enterOffset(fw) } togetherWith
         fadeOut(animationSpec = tween(NAV_FADE_MS, easing = exitEasing)) +
-        androidx.compose.animation.slideOutHorizontally(
+        slideOutHorizontally(
             animationSpec = tween(NAV_ANIM_MS, easing = exitEasing),
         ) { fw -> exitOffset(fw) }
 }
@@ -85,12 +88,12 @@ class NavTransitionSpecs internal constructor(
     val predictivePopEnter: (Int) -> Int,
     val predictivePopExit: (Int) -> Int,
 ) {
-    fun forwardTransform(): AnimatedContentTransitionScope<Any?>.() -> ContentTransform =
+    fun forwardTransform(): AnimatedContentTransitionScope<*>.() -> ContentTransform =
         { softFadeSlide(forwardEnter, forwardExit) }
 
-    fun popTransform(): AnimatedContentTransitionScope<Any?>.() -> ContentTransform =
+    fun popTransform(): AnimatedContentTransitionScope<*>.() -> ContentTransform =
         { softFadeSlide(popEnter, popExit) }
 
-    fun predictivePopTransform(): AnimatedContentTransitionScope<Any?>.() -> ContentTransform =
+    fun predictivePopTransform(): AnimatedContentTransitionScope<*>.() -> ContentTransform =
         { softFadeSlide(predictivePopEnter, predictivePopExit) }
 }

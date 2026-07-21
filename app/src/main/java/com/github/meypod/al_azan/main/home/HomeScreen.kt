@@ -127,9 +127,9 @@ fun HomeScreen(
         }
     }
 
-    PredictableBack(enabled = drawerState.isOpen) {
+    PredictableBack(enabled = drawerState.isOpen, onBack = {
         scope.launch { drawerState.close() }
-    }
+    })
 
     ModalNavigationDrawer(
         modifier = modifier,
@@ -152,7 +152,7 @@ fun HomeScreen(
                 ) {
                     // Apps section — main entries the user reaches while using the app.
                     DrawerSectionLabel(stringResource(R.string.drawer_section_apps))
-                    DrawerEntries(drawerState = drawerState) {
+                    DrawerEntries {
                         DrawerEntry(
                             iconRes = R.drawable.alarm,
                             label = stringResource(R.string.reminders_title),
@@ -177,7 +177,7 @@ fun HomeScreen(
                     }
                     // Tools section — configuration / up-next status affected by alarms.
                     DrawerSectionLabel(stringResource(R.string.drawer_section_tools))
-                    DrawerEntries(drawerState = drawerState) {
+                    DrawerEntries {
                         DrawerEntry(
                             iconRes = R.drawable.outline_calendar_month_24,
                             label = stringResource(R.string.upcoming_alarms),
@@ -191,7 +191,7 @@ fun HomeScreen(
                     }
                     // Other section — about + conditional developer items.
                     DrawerSectionLabel(stringResource(R.string.drawer_section_other))
-                    DrawerEntries(drawerState = drawerState) {
+                    DrawerEntries {
                         DrawerEntry(
                             iconRes = R.drawable.info_variant_outline,
                             label = stringResource(R.string.about),
@@ -505,8 +505,7 @@ private fun DrawerSectionLabel(text: String) {
 /** Renders a stacked group of drawer entries inside its own column (anchors the section label). */
 @Composable
 private fun DrawerEntries(
-    drawerState: androidx.compose.material3.DrawerState,
-    content: androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     Column(modifier = androidx.compose.ui.Modifier) {
         content()
@@ -519,13 +518,11 @@ private fun DrawerEntry(
     iconRes: Int,
     label: String,
     onClick: () -> Unit,
-    modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
+    modifier: androidx.compose.ui.Modifier = Modifier,
     focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
 ) {
-    var resolvedModifier = modifier
-    if (focusRequester != null) {
-        resolvedModifier = androidx.compose.ui.Modifier.focusRequester(focusRequester)
-    }
+    val resolvedModifier: Modifier =
+        if (focusRequester != null) modifier.focusRequester(focusRequester) else modifier
     NavigationDrawerItem(
         modifier = resolvedModifier,
         icon = { Icon(painterResource(iconRes), contentDescription = null) },
