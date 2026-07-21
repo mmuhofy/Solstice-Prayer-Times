@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
     // AGP 9 has Kotlin support built in — applying kotlin.android is rejected as legacy (Kotlin 2.4).
+    // :core-ui has no Kotlin-specific JVM target override; JVM 11 from java compile options is enough.
 }
 
 android {
@@ -15,9 +16,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-        kotlinOptions {
-            jvmTarget = "11"
-        }
     }
 
     buildFeatures {
