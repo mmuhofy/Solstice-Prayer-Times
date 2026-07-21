@@ -89,8 +89,21 @@ private fun MuezzinPicker(
                 optionKey = { it.id },
                 optionLabel = audioEntryLabel(),
                 optionCanDelete = { it.id in userIds },
-                // The silent track has nothing to hear — show a static volume-off icon instead of a play button.
-                optionPreviewable = { it.id != SILENT_AUDIO_ID },
+                // Placeholder entries still resolve to silence.wav; suppress preview + label them so the
+                // user knows the audio file is pending bundling rather than previewing nothing useful.
+                optionSubtitle = { entry ->
+                    if (entry is AudioEntry.ResourceAudioEntry &&
+                        entry.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) &&
+                        entry.resId == R.raw.silence
+                    ) {
+                        stringResource(R.string.adhan_preview_placeholder)
+                    } else null
+                },
+                optionPreviewable = { entry ->
+                    if (entry.id == SILENT_AUDIO_ID) return@AudioPickerField false
+                    val resource = entry as? AudioEntry.ResourceAudioEntry ?: return@AudioPickerField true
+                    resource.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) && resource.resId != R.raw.silence
+                },
                 optionLeadingIcon = { R.drawable.outline_volume_off.takeIf { _ -> it.id == SILENT_AUDIO_ID } },
                 onSelect = { onAction(AdhanSettingsUiAction.OnGlobalMuezzinSelect(it)) },
                 onPreview = { onAction(AdhanSettingsUiAction.OnPreviewAudio(it)) },

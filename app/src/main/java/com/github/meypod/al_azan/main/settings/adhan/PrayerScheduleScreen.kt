@@ -170,12 +170,27 @@ fun PrayerScheduleScreen(
                 playingId = uiState.playingId,
                 optionKey = { it?.id ?: DEFAULT_MUEZZIN_KEY },
                 optionLabel = { it?.let(labelFn) ?: defaultLabel },
-                optionSubtitle = { if (it == null) globalDefaultMuezzin?.let(labelFn) else null },
+                optionSubtitle = { entry ->
+                    when {
+                        entry == null -> globalDefaultMuezzin?.let(labelFn)
+                        // Boldly advertise placeholder entries so users don't waste time previewing silence.
+                        entry is AudioEntry.ResourceAudioEntry &&
+                            entry.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) &&
+                            entry.resId == R.raw.silence ->
+                            stringResource(R.string.adhan_preview_placeholder)
+                        else -> null
+                    }
+                },
                 // The "use default" item previews the resolved global muezzin, so its play/stop state
                 // tracks that sound's id rather than the synthetic default key.
                 optionPreviewKey = { it?.id ?: globalDefaultMuezzin?.id ?: DEFAULT_MUEZZIN_KEY },
                 // The silent track has nothing to hear — show a static volume-off icon instead of a play button.
-                optionPreviewable = { it?.id != SILENT_AUDIO_ID },
+                optionPreviewable = { entry ->
+                    entry?.id != SILENT_AUDIO_ID &&
+                        !(entry is AudioEntry.ResourceAudioEntry &&
+                            entry.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) &&
+                            entry.resId == R.raw.silence)
+                },
                 optionLeadingIcon = { if (it?.id == SILENT_AUDIO_ID) R.drawable.outline_volume_off else null },
                 optionCanDelete = { it != null && it.id in userIds },
                 onSelect = { onAction(AdhanSettingsUiAction.OnScheduleMuezzinChange(prayer, it)) },
