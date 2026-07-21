@@ -48,7 +48,7 @@ fun <T> AudioPickerField(
     selectedKey: String?,
     playingId: String?,
     optionKey: (T) -> String,
-    optionLabel: @Composable (T) -> String,
+    optionLabel: (T) -> String,
     onSelect: (T) -> Unit,
     onPreview: (T) -> Unit,
     onStopPreview: () -> Unit,
@@ -58,7 +58,7 @@ fun <T> AudioPickerField(
     // Static leading icon (drawable res) for a non-previewable option, shown where the play button would
     // be so the row aligns with its siblings instead of reading as a bare header. Ignored when previewable.
     optionLeadingIcon: (T) -> Int? = { null },
-    optionSubtitle: @Composable (T) -> String? = { null },
+    optionSubtitle: (T) -> String? = { null },
     // The id whose playback this option drives — usually its own key, but an option that delegates to
     // another sound (e.g. "use default") returns that sound's id so the play/stop state stays in sync.
     optionPreviewKey: (T) -> String = optionKey,

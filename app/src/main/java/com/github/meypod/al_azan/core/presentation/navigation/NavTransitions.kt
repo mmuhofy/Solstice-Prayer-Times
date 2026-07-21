@@ -39,33 +39,34 @@ fun rememberHorizontalSlideDirections(): HorizontalSlideDirections {
 }
 
 /**
- * M3 Expressive-style eased slide + fade transitions for Navigation 3's [animatedContentTransitionSpec]
- * -shaped lambdas. Built once with [rememberNavTransitionSpecs] and reused at every call site, so the
- * NavDisplay arguments resolve directly against the qualifier inputs without per-call work.
+ * M3 Expressive-style eased slide + fade pair. The fade is half the slide duration so the
+ * destination doesn't flash on entry.
  */
 private const val NAV_ANIM_MS = 320
 private const val NAV_FADE_MS = 160
 
-private fun slideFade(
+private fun slideFadePair(
     enterOffset: (Int) -> Int,
     exitOffset: (Int) -> Int,
 ): Pair<EnterTransition, ExitTransition> = Pair(
     fadeIn(animationSpec = tween(NAV_FADE_MS, easing = FastOutSlowInEasing)) +
-        slideInHorizontally(
-            animationSpec = tween(NAV_ANIM_MS, easing = FastOutSlowInEasing),
-        ) { fw -> enterOffset(fw) },
+        slideInHorizontally(animationSpec = tween(NAV_ANIM_MS, easing = FastOutSlowInEasing)) {
+            fw -> enterOffset(fw)
+        },
     fadeOut(animationSpec = tween(NAV_FADE_MS, easing = FastOutSlowInEasing)) +
-        slideOutHorizontally(
-            animationSpec = tween(NAV_ANIM_MS, easing = FastOutSlowInEasing),
-        ) { fw -> exitOffset(fw) },
+        slideOutHorizontally(animationSpec = tween(NAV_ANIM_MS, easing = FastOutSlowInEasing)) {
+            fw -> exitOffset(fw)
+        },
 )
 
 /**
- * Pre-built transition lambdas for [androidx.navigation3.ui.NavDisplay]. Each entry exposes itself as
- * the shape NavDisplay expects: a [AnimatedContentTransitionScope]-receiver function returning a
- * [ContentTransform]. The Navigation 3 spec infers its concrete generic parameter from the receiver
- * context (which is encoded inside the lambda); we don't print it here — the lambda only captures
- * the navigation directions at construction time.
+ * Pre-built transition lambdas for [androidx.navigation3.ui.NavDisplay]. Each returning lambda is
+ * typed as `AnimatedContentTransitionScope<*>.() -> ContentTransform` (the most general shape that
+ * satisfies Navigation 3's `transitionSpec` while matching the 1-arg + 2-arg overload family).
+ *
+ * Compose Compiler derives a `ComposableFunction1`/`ComposableFunction2` shape; we keep the documented
+ * (Int) -> ContentTransform variant for predictive-pop explicitly so overload resolution wins for
+ * the 2-arg call site.
  */
 class NavTransitionSpecs internal constructor(
     private val forwardEnter: (Int) -> Int,
@@ -75,28 +76,21 @@ class NavTransitionSpecs internal constructor(
     private val predictivePopEnter: (Int) -> Int,
     private val predictivePopExit: (Int) -> Int,
 ) {
-    /**
-     * Produces a generic-shaped lambda of the form `AnimatedContentTransitionScope<*>.(...) -> ContentTransform`.
-     * We use an explicit unchecked cast at the boundary because NavDisplay's expected shape is
-     * internal-API and not public-on-every-type — calling sites have historically trusted
-     * NaivePair approach to satisfying the receiver. Cleaner updates may follow when Compose 1.10
-     * exposes a public qualifier.
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun forwardTransform(): Any = {
-        val (incoming, outgoing) = slideFade(forwardEnter, forwardExit)
+    fun forwardTransform(
+    ): AnimatedContentTransitionScope<*>.() -> ContentTransform = {
+        val (incoming, outgoing) = slideFadePair(forwardEnter, forwardExit)
         incoming togetherWith outgoing
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun popTransform(): Any = {
-        val (incoming, outgoing) = slideFade(popEnter, popExit)
+    fun popTransform(
+    ): AnimatedContentTransitionScope<*>.() -> ContentTransform = {
+        val (incoming, outgoing) = slideFadePair(popEnter, popExit)
         incoming togetherWith outgoing
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun predictivePopTransform(): Any = {
-        val (incoming, outgoing) = slideFade(predictivePopEnter, predictivePopExit)
+    fun predictivePopTransform(
+    ): AnimatedContentTransitionScope<*>.(Int) -> ContentTransform = { _ ->
+        val (incoming, outgoing) = slideFadePair(predictivePopEnter, predictivePopExit)
         incoming togetherWith outgoing
     }
 }

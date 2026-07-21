@@ -165,11 +165,13 @@ fun LanguageSelectionScreen(
 
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                val localeLabel: @Composable (com.github.meypod.al_azan.core.domain.model.settings.SupportedLanguage) -> String =
+                    { it.label }
                 BottomSelect(
                     modifier = Modifier.widthIn(min = 280.dp),
                     options = SupportedLocales,
                     optionKey = { it.value },
-                    optionLabel = { it.label },
+                    optionLabel = localeLabel,
                     optionSearchTag = { it.tags },
                     selectedKey = selectedLanguage.value,
                     onSelect = { onAction(LanguageSelectionUiAction.OnLanguageSelected(it.value)) },

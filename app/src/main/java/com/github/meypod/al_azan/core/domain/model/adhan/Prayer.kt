@@ -45,6 +45,14 @@ enum class Prayer(
 @Composable
 fun Prayer.i18n() = stringResource(stringRes)
 
+/** Object wrapper exposing [Prayer.i18n] as a Composable function with an explicit receiver —
+ *  the canonical call site is `PrayerI18n.label(prayer)`. Works around ambiguous-receiver errors
+ *  where another type in the same scope also exposes `i18n()`. */
+object PrayerI18n {
+    @Composable
+    fun label(prayer: Prayer): String = with(prayer) { stringResource(stringRes) }
+}
+
 val SHARIA_TIMES_IN_ORDER: List<Prayer> = Prayer.entries.toList()
 
 val NON_PRAYERS_IN_ORDER: List<Prayer> =

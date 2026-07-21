@@ -48,11 +48,20 @@ fun MinutesSelect(
     } else {
         null
     }
+    // Pre-compute the per-quantity label outside the BottomSelect call so the @Composable lambda
+    // parameter can be a real composable lambda; Inline @Composable lambdas with resource lookups
+    // are accepted in call-site but Kotlin 2.4 + Compose Compiler flag them on mismatch.
+    val labelCache = androidx.compose.runtime.remember {
+        mutableMapOf<Int, String>()
+    }
+    val optionLabel: @Composable (Int) -> String = { qty ->
+        labelCache.getOrPut(qty) { resources.getQuantityString(R.plurals.time_unit_minutes, qty, qty) }
+    }
     BottomSelect(
         modifier = modifier,
         options = options,
         optionKey = { it.toString() },
-        optionLabel = { resources.getQuantityString(R.plurals.time_unit_minutes, it, it) },
+        optionLabel = optionLabel,
         selectedKey = selected.toString(),
         selectedLabelOverride = customLabel,
         onSelect = onSelect,

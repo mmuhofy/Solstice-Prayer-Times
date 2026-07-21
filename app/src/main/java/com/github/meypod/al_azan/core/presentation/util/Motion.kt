@@ -2,7 +2,6 @@ package com.github.meypod.al_azan.core.presentation.util
 
 import android.provider.Settings
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.AnimationVector
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
@@ -35,9 +34,9 @@ private fun isReducedMotion(context: android.content.Context): Boolean {
 
 /** Replace any animation spec with an "instant" one when motion is reduced; otherwise pass through. */
 @Composable
-fun AnimationSpec<*>.reduceMotionIfNeeded(
+fun <T> AnimationSpec<T>.reduceMotionIfNeeded(
     reducedMotion: Boolean = rememberReducedMotion(),
-): AnimationSpec<*> =
+): AnimationSpec<T> =
     if (reducedMotion) tween(durationMillis = 1, easing = FastOutSlowInEasing) else this
 
 /**

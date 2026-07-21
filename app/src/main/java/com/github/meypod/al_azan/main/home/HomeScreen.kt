@@ -361,11 +361,12 @@ fun HomeScreen(
                         )
                     }
                     if (uiState.showNextPrayerCountdown && uiState.nextShariaTime != null) {
+                        val nextPrayer = uiState.nextShariaTime.prayer
+                        // Pin to a local so the @Composable i18n() extension binds unambiguously when
+                        // receiver-overload resolution stumbles on HomeShortcut.i18n().
                         NextPrayerHeroCard(
                             countdownText = uiState.countdownText,
-                            nextPrayerLabel = com.github.meypod.al_azan.core.domain.model.adhan.i18n(
-                                uiState.nextShariaTime.prayer
-                            ),
+                            nextPrayerLabel = i18nHelper(nextPrayer),
                             refreshTick = uiState.currentInstant,
                             elapsedFraction = uiState.elapsedFractionOfPrayerInterval,
                         )
@@ -533,3 +534,12 @@ private fun DrawerEntry(
         onClick = onClick,
     )
 }
+
+/**
+ * Local Composable wrapper that calls the @Composable i18n() extension on [Prayer] through an
+ * explicit receiver type — fixing ambiguous overload resolution when [HomeShortcut.i18n]
+ * (non-composable) shadows it in tight scopes.
+ */
+@Composable
+private fun i18nHelper(prayer: com.github.meypod.al_azan.core.domain.model.adhan.Prayer): String =
+    com.github.meypod.al_azan.core.domain.model.adhan.PrayerI18n.label(prayer)

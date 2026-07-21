@@ -221,7 +221,20 @@ internal fun muezzinSections(uiState: AdhanSettingsUiState): List<AudioPickerSec
     }
 }
 
-/** Resolves an [AudioEntry] label (resource string or user label), suffixing looping device sounds. */
+/** Same as [audioEntryLabel] but takes the already-resolved [repeatSuffix] so the resulting closure
+ *  is non-composable and can be passed to lambdas that don't accept a @Composable facade. */
+internal fun audioEntryLabel(repeatSuffix: String): (AudioEntry) -> String {
+    return { entry ->
+        val resources = entry.resources
+        val base = when (entry) {
+            is AudioEntry.ResourceAudioEntry -> resources.getString(entry.labelResId)
+            is ExternalAudioEntry -> entry.label
+        }
+        if (entry.loop) "$base ($repeatSuffix)" else base
+    }
+}
+
+/** Convenience: a Composable wrapper that additionally pulls the resources/repeat string. */
 @Composable
 internal fun audioEntryLabel(): (AudioEntry) -> String {
     val resources = LocalResources.current
@@ -229,8 +242,11 @@ internal fun audioEntryLabel(): (AudioEntry) -> String {
     return { entry ->
         val base = when (entry) {
             is AudioEntry.ResourceAudioEntry -> resources.getString(entry.labelResId)
-            is AudioEntry.ExternalAudioEntry -> entry.label
+            is ExternalAudioEntry -> entry.label
         }
+        if (entry.loop) "$base ($repeat)" else base
+    }
+}
         if (entry.loop) "$base ($repeat)" else base
     }
 }
