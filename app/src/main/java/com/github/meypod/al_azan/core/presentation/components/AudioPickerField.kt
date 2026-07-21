@@ -58,7 +58,10 @@ fun <T> AudioPickerField(
     // Static leading icon (drawable res) for a non-previewable option, shown where the play button would
     // be so the row aligns with its siblings instead of reading as a bare header. Ignored when previewable.
     optionLeadingIcon: (T) -> Int? = { null },
-    optionSubtitle: (T) -> String? = { null },
+    // Composable so the lambda body can call stringResource / locale-resolving lookups inside
+    // itemContent (which is itself @Composable). Caller is expected to use a Composable lambda
+    // body. The default value is itself an inline @Composable lambda returning null.
+    optionSubtitle: @androidx.compose.runtime.Composable (T) -> String? = { null },
     // The id whose playback this option drives — usually its own key, but an option that delegates to
     // another sound (e.g. "use default") returns that sound's id so the play/stop state stays in sync.
     optionPreviewKey: (T) -> String = optionKey,
