@@ -167,8 +167,6 @@ fun IntroNavigation(onFinishIntro: () -> Unit) {
         transitionSpec = navSpecs.forwardTransform(),
         popTransitionSpec = navSpecs.popTransform(),
         predictivePopTransitionSpec = navSpecs.predictivePopTransform(),
-                )
-        },
         entryDecorators =
             listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
