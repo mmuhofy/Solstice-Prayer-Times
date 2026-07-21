@@ -1,0 +1,17 @@
+Material You 2.0 — Solstice Prayer Times fork release.
+
+Highlights:
+- AMOLED true-black theme option (huge OLED battery savings)
+- Material You dynamic color overlay with custom seed color picker
+- Predictive back animations throughout the app (Android 14+)
+- Home screen revamped with a Next Prayer hero card (large countdown + animated progress arc)
+- Drawer refactored to Material 3 grouped sections (Apps / Tools / Other)
+- 4-step onboarding (down from 7) — Language → Location → Calculation → Adhan
+- Onboarding/intro adıms sayısı azaltıldı, RestoreBackup ve Troubleshoot Settings'e taşındı
+- Accessibility: reduced-motion detection + TalkBack live region on the hero card
+- 25+ bundled adhan recitations organized by category (Mosques / Muezzins / Styles); placeholder entries are clearly labeled while real audio is queued for bundling
+- Project Gradle modules: new :core-ui and :core-data skeletons in place (no behavior change yet)
+- Release-build CI: new release.yml on JDK 21 with full signing + per-ABI/uploaded AAB to Play + GitHub assets
+
+Bugfix
+- runBlocking on MainActivity.onCreate removed; splash screen now blocks via setKeepOnScreenCondition while IO loads
