@@ -2,7 +2,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+    // AGP 9 has Kotlin support built in — applying the kotlin.android plugin is intentionally
+    // not done here (Kotlin 2.4 + AGP 9 rejects it as legacy). The Compose compiler plugin is
+    // still available via alias(libs.plugins.kotlin.compose) when needed for Compose sources.
     alias(libs.plugins.ksp)
     alias(libs.plugins.dagger.hilt)
     alias(libs.plugins.jetbrains.kotlin.serialization)
@@ -19,12 +21,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_11)
+        // AGP 9 understands the Kotlin target without pulling in kotlin.android's plugin.
+        kotlinOptions {
+            jvmTarget = JvmTarget.JVM_11.toString()
+        }
     }
 }
 
