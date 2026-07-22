@@ -166,7 +166,7 @@ fun LanguageSelectionScreen(
 
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                val localeLabel: @Composable (SupportedLocale) -> String = { it.label }
+                val localeLabel: (SupportedLocale) -> String = { it.label }
                 BottomSelect(
                     modifier = Modifier.widthIn(min = 280.dp),
                     options = SupportedLocales,
