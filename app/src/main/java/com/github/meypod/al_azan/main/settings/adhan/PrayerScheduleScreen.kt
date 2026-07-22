@@ -22,6 +22,7 @@ import com.github.meypod.al_azan.core.domain.model.adhan.i18n
 import com.github.meypod.al_azan.core.domain.model.adhan.toAdhanKey
 import com.github.meypod.al_azan.core.domain.model.alarm.VibrationMode
 import com.github.meypod.al_azan.core.domain.model.settings.AudioEntry
+import com.github.meypod.al_azan.core.domain.model.settings.AdhanCategory
 import com.github.meypod.al_azan.core.domain.model.settings.NOTIFICATION_AUDIO_ID
 import com.github.meypod.al_azan.core.domain.model.settings.SILENT_AUDIO_ID
 import com.github.meypod.al_azan.core.domain.model.settings.isResolvable
@@ -67,15 +68,34 @@ fun PrayerScheduleScreen(
     val defaultLabel = stringResource(R.string.use_default_muezzin)
     val labelFn = audioEntryLabel()
     val userIds = uiState.settings.savedUserAudioEntries.map { it.id }.toSet()
-    val muezzinSections = listOf<AudioPickerSection<AudioEntry?>>(
-        AudioPickerSection(
-            null,
-            listOf<AudioEntry?>(null, mapAdhanIdToEntry(NOTIFICATION_AUDIO_ID), mapAdhanIdToEntry(SILENT_AUDIO_ID)),
-        ),
-        AudioPickerSection(stringResource(R.string.muezzin), uiState.settings.savedAdhanAudioEntries),
-        AudioPickerSection(stringResource(R.string.your_sounds), uiState.settings.savedUserAudioEntries),
-        AudioPickerSection(stringResource(R.string.device_sounds), uiState.deviceSounds),
-    )
+
+    val mosquesLabel = stringResource(R.string.adhan_category_mosques)
+    val muezzinsLabel = stringResource(R.string.adhan_category_muezzins)
+    val stylesLabel = stringResource(R.string.adhan_category_styles)
+    val yourSoundsLabel = stringResource(R.string.your_sounds)
+    val deviceSoundsLabel = stringResource(R.string.device_sounds)
+    val byCategory = uiState.settings.savedAdhanAudioEntries
+        .filterIsInstance<AudioEntry.ResourceAudioEntry>()
+        .groupBy { it.category ?: AdhanCategory.Mosques }
+    val muezzinSections = buildList<AudioPickerSection<AudioEntry?>> {
+        add(
+            AudioPickerSection(
+                null,
+                listOf<AudioEntry?>(null, mapAdhanIdToEntry(NOTIFICATION_AUDIO_ID), mapAdhanIdToEntry(SILENT_AUDIO_ID)),
+            ),
+        )
+        byCategory[AdhanCategory.Mosques]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(mosquesLabel, it))
+        }
+        byCategory[AdhanCategory.Muezzins]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(muezzinsLabel, it))
+        }
+        byCategory[AdhanCategory.Styles]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(stylesLabel, it))
+        }
+        add(AudioPickerSection(yourSoundsLabel, uiState.settings.savedUserAudioEntries))
+        add(AudioPickerSection(deviceSoundsLabel, uiState.deviceSounds))
+    }
 
     val rowState = AdhanScheduleRowUiState.fromPrayerAlarmSettings(
         prayer,
@@ -150,12 +170,27 @@ fun PrayerScheduleScreen(
                 playingId = uiState.playingId,
                 optionKey = { it?.id ?: DEFAULT_MUEZZIN_KEY },
                 optionLabel = { it?.let(labelFn) ?: defaultLabel },
-                optionSubtitle = { if (it == null) globalDefaultMuezzin?.let(labelFn) else null },
+                optionSubtitle = { entry ->
+                    when {
+                        entry == null -> globalDefaultMuezzin?.let(labelFn)
+                        // Boldly advertise placeholder entries so users don't waste time previewing silence.
+                        entry is AudioEntry.ResourceAudioEntry &&
+                            entry.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) &&
+                            entry.resId == R.raw.silence ->
+                            stringResource(R.string.adhan_preview_placeholder)
+                        else -> null
+                    }
+                },
                 // The "use default" item previews the resolved global muezzin, so its play/stop state
                 // tracks that sound's id rather than the synthetic default key.
                 optionPreviewKey = { it?.id ?: globalDefaultMuezzin?.id ?: DEFAULT_MUEZZIN_KEY },
                 // The silent track has nothing to hear — show a static volume-off icon instead of a play button.
-                optionPreviewable = { it?.id != SILENT_AUDIO_ID },
+                optionPreviewable = { entry ->
+                    entry?.id != SILENT_AUDIO_ID &&
+                        !(entry is AudioEntry.ResourceAudioEntry &&
+                            entry.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) &&
+                            entry.resId == R.raw.silence)
+                },
                 optionLeadingIcon = { if (it?.id == SILENT_AUDIO_ID) R.drawable.outline_volume_off else null },
                 optionCanDelete = { it != null && it.id in userIds },
                 onSelect = { onAction(AdhanSettingsUiAction.OnScheduleMuezzinChange(prayer, it)) },

@@ -1,32 +1,39 @@
-# Al-Azan
+# Solstice Prayer Times
 
-an open-source Adhan (أذان) - prayer times application, built natively for Android with Jetpack Compose.
+A modern, open-source Adhan (أذان) — prayer times application, built natively for Android with Jetpack Compose and Material 3 Expressive (Material You).
 
-> This is a rewrite of the original [al-azan](https://github.com/meypod/al-azan/) (React Native) app.
-
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="80">](https://f-droid.org/packages/com.github.meypod.al_azan/)
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-     alt='Get it on Google Play'
-     height="80">](https://play.google.com/store/apps/details?id=com.github.meypod.al_azan)
-[<img src="fastlane/get-it-on-github.png"
-     alt='Get it on GitHub'
-     height="80">](https://github.com/meypod/al-azan-compose/releases/latest)
+> Forked from [Al-Azan](https://github.com/meypod/al-azan-compose/) (originally a rewrite of the React Native [al-azan](https://github.com/meypod/al-azan/) app). This fork modernizes the UI with full Material You, adds 25+ adhan recitations, predictive back, adaptive navigation, and a redesigned onboarding.
 
 ## Features
 
-* Ad-Free
+* **Full Material You** — Material 3 Expressive with dynamic color, AMOLED black mode, custom seed color picker
 
-* No internet permission: the app can never access the internet
+* **25+ Adhan recitations** — from Masjid al-Haram, Masjid al-Aqsa, Al-Azhar, Süleymaniye, and more, with category filters and preview
 
-* Doesn't use any kind of trackers
+* **Predictive back** — modern Android back gesture animations throughout
 
-* Open-source
+* **Adaptive navigation** — bottom bar on phones, navigation rail on tablets/foldables
+
+* **Redesigned onboarding** — 3 streamlined steps instead of 7
+
+* **Ad-Free**
+
+* **No internet permission**: the app can never access the internet
+
+* **Doesn't use any kind of trackers**
+
+* **Open-source** (AGPL-3.0)
 
 * You can search for your location offline Or use GPS
 
-* Set custom Adhan audio, or pick any sound from your device
+* **25+ bundled adhan recitations** organised by category (Mosques / Muezzins / Styles).
+  Add custom audio or pick any sound from your device.
+
+* **Adaptive navigation** — Navigation rail on tablets, bottom bar on phones
+
+* **AMOLED true-black theme** for OLED battery savings
+
+* **Custom seed color** override for Material You accents
 
 * Select different Adhan audio for Fajr namaz
 
@@ -34,7 +41,7 @@ an open-source Adhan (أذان) - prayer times application, built natively for A
 
 * Many options for Adhan (اذان) calculation
 
-* Light and Dark theme, with Material You dynamic colors
+* Light, Dark, AMOLED Black and Classic themes, with Material You dynamic colors
 
 * Monthly prayer times view
 

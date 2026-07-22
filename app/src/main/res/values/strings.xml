@@ -228,6 +228,10 @@
     <string name="theme_classic_light">Classic Light</string>
     <string name="theme_system_default">System Default</string>
     <string name="theme_dynamic">Dynamic</string>
+    <string name="theme_amoled">AMOLED Black</string>
+    <string name="custom_seed_color">Custom seed color</string>
+    <string name="custom_seed_color_help">Override Material You accents with a custom seed color. Works with Dynamic and System Default themes on Android 12+.</string>
+    <string name="custom_seed_color_clear">Clear custom color</string>
     <string name="countdown_timer">Home countdown timer</string>
     <string name="countdown_timer_help">Show time remaining to next prayer on the home screen.</string>
     <string name="countdown_skip_non_prayers">Count down to prayers only</string>
@@ -396,6 +400,33 @@
     <string name="abdul_basit_abdus_samad">Abdul-Basit Abdus-Samad</string>
     <string name="ragheb_mustafa_ghalwash">Ragheb Mustafa Ghalwash</string>
     <string name="moazen_zade">Moazen Zade</string>
+    <!-- Additional bundled adhan recitations (mosques / muezzins / styles). -->
+    <string name="masjid_al_haram">Masjid Al-Haram</string>
+    <string name="masjid_al_aqsa">Masjid Al-Aqsa</string>
+    <string name="al_azhar">Al-Azhar Mosque</string>
+    <string name="suleymaniye">Süleymaniye Mosque</string>
+    <string name="masjid_al_nabawi_old">Masjid An-Nabawi (old recording)</string>
+    <string name="sheikh_zayed_grand">Sheikh Zayed Grand Mosque</string>
+    <string name="hassan_ii">Hassan II Mosque</string>
+    <string name="prophet_mosque_madinah">Prophet\'s Mosque, Madinah</string>
+    <string name="putra_mosque">Putra Mosque</string>
+    <string name="mishary_alafasy">Mishary Alafasy</string>
+    <string name="abdulrahman_sudais">Abdul Rahman Al-Sudais</string>
+    <string name="saad_al_ghamdi">Saad Al-Ghamdi</string>
+    <string name="mashary_rashid_alafasy">Mashary Rashid Alafasy</string>
+    <string name="maher_al_muaiqly">Maher Al-Muaiqly</string>
+    <string name="bandar_balilah">Bandar Balilah</string>
+    <string name="ali_ahmed_mulla">Ali Ahmed Mulla</string>
+    <string name="muhammad_al_luhaidan">Muhammad Al-Luhaidan</string>
+    <string name="egyptian_style">Egyptian style</string>
+    <string name="turkish_style">Turkish style</string>
+    <string name="moroccan_style">Moroccan style</string>
+    <string name="hijaz_style">Hijazi style</string>
+    <!-- Picker UI section labels. -->
+    <string name="adhan_category_mosques">Mosques</string>
+    <string name="adhan_category_muezzins">Muezzins</string>
+    <string name="adhan_category_styles">Styles</string>
+    <string name="adhan_preview_placeholder">Demo track — audio file will be bundled shortly</string>
     <string name="prayer_times_rescheduled">Next adhan: %1$s at %2$s</string>
     <string name="prayer_time_adjusted" translatable="false">%1$s: %2$s</string>
 
@@ -738,5 +769,10 @@
     <!-- Reschedule-feedback time carrying a relative day. "%1$s" = clock time, "%2$s" = Tomorrow / weekday
          (both already localized); this string is only the separator, so it isn't translated. -->
     <string name="reschedule_when" translatable="false">%1$s, %2$s</string>
+
+    <!-- Drawer section labels (Material 3 grouped navigation pattern). -->
+    <string name="drawer_section_apps">Apps</string>
+    <string name="drawer_section_tools">Tools</string>
+    <string name="drawer_section_other">Other</string>
 
 </resources>

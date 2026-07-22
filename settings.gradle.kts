@@ -21,5 +21,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Al-Azan"
+rootProject.name = "Solstice-Prayer-Times"
 include(":app")
+include(":core-ui")
+include(":core-data")

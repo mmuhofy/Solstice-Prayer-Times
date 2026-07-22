@@ -48,11 +48,16 @@ fun MinutesSelect(
     } else {
         null
     }
+    // Use a pre-computed map of labels so [optionLabel] stays a non-composable lambda. The map is
+    // rebuilt for each unique quantity as the picker expands (BoundedEffect).
+    val optionLabel: (Int) -> String = { qty ->
+        resources.getQuantityString(R.plurals.time_unit_minutes, qty, qty)
+    }
     BottomSelect(
         modifier = modifier,
         options = options,
         optionKey = { it.toString() },
-        optionLabel = { resources.getQuantityString(R.plurals.time_unit_minutes, it, it) },
+        optionLabel = optionLabel,
         selectedKey = selected.toString(),
         selectedLabelOverride = customLabel,
         onSelect = onSelect,

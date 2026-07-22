@@ -24,11 +24,47 @@ import kotlinx.serialization.json.jsonObject
 
 private enum class DefaultAdhanEntryId(
     val key: String,
+    val category: AdhanCategory,
 ) {
-    MasjidAnNabawi("masjid_an_nabawi"),
-    AbdulBasitAbduSamad("abdul_basit_abdus_samad"),
-    RaghebMustafaGhalwash("ragheb_mustafa_ghalwash"),
-    MoazenZade("moazen_zade"),
+    MasjidAnNabawi("masjid_an_nabawi", AdhanCategory.Mosques),
+    MasjidAlHaram("masjid_al_haram", AdhanCategory.Mosques),
+    MasjidAlAqsa("masjid_al_aqsa", AdhanCategory.Mosques),
+    AlAzhar("al_azhar", AdhanCategory.Mosques),
+    Suleymaniye("suleymaniye", AdhanCategory.Mosques),
+    MasjidAlNabawiOld("masjid_al_nabawi_old", AdhanCategory.Mosques),
+    SheikhZayedGrand("sheikh_zayed_grand", AdhanCategory.Mosques),
+    HassanIi("hassan_ii", AdhanCategory.Mosques),
+    ProphetMosqueMadinah("prophet_mosque_madinah", AdhanCategory.Mosques),
+    PutraMosque("putra_mosque", AdhanCategory.Mosques),
+
+    AbdulBasitAbduSamad("abdul_basit_abdus_samad", AdhanCategory.Muezzins),
+    RaghebMustafaGhalwash("ragheb_mustafa_ghalwash", AdhanCategory.Muezzins),
+    MoazenZade("moazen_zade", AdhanCategory.Muezzins),
+    MisharyAlafasy("mishary_alafasy", AdhanCategory.Muezzins),
+    AbdulRahmanSudais("abdulrahman_sudais", AdhanCategory.Muezzins),
+    SaadAlGhamdi("saad_al_ghamdi", AdhanCategory.Muezzins),
+    MasharyRashidAlafasy("mashary_rashid_alafasy", AdhanCategory.Muezzins),
+    MaherAlMuaiqly("maher_al_muaiqly", AdhanCategory.Muezzins),
+    BandarBalilah("bandar_balilah", AdhanCategory.Muezzins),
+    AliAhmedMulla("ali_ahmed_mulla", AdhanCategory.Muezzins),
+    MuhammadAlLuhaidan("muhammad_al_luhaidan", AdhanCategory.Muezzins),
+
+    EgyptianStyle("egyptian_style", AdhanCategory.Styles),
+    TurkishStyle("turkish_style", AdhanCategory.Styles),
+    MoroccanStyle("moroccan_style", AdhanCategory.Styles),
+    HijazStyle("hijaz_style", AdhanCategory.Styles),
+}
+
+/**
+ * Coarse adhan grouping surfaced in the picker UI: mosques (audio captured at famous masjids),
+ * muezzins (specific reciters), and styles (regional or stylistic traditions). Stable ids so
+ * stored selections round-trip; new entries should pick a stable key and add matching raw assets.
+ */
+@Serializable
+enum class AdhanCategory {
+    @SerialName("mosques") Mosques,
+    @SerialName("muezzins") Muezzins,
+    @SerialName("styles") Styles,
 }
 
 /**
@@ -72,41 +108,193 @@ fun mapAdhanIdToEntryOrNull(key: String): AudioEntry.ResourceAudioEntry? =
             DefaultAdhanEntryId.MasjidAnNabawi.key,
             R.raw.masjid_an_nabawi,
             R.string.masjid_an_nabawi,
+            AdhanCategory.Mosques,
         )
 
         DefaultAdhanEntryId.AbdulBasitAbduSamad.key -> AudioEntry.ResourceAudioEntry(
             DefaultAdhanEntryId.AbdulBasitAbduSamad.key,
             R.raw.abdul_basit_abdus_samad,
             R.string.abdul_basit_abdus_samad,
+            AdhanCategory.Muezzins,
         )
 
         DefaultAdhanEntryId.RaghebMustafaGhalwash.key -> AudioEntry.ResourceAudioEntry(
             DefaultAdhanEntryId.RaghebMustafaGhalwash.key,
             R.raw.ragheb_mustafa_ghalwash,
             R.string.ragheb_mustafa_ghalwash,
+            AdhanCategory.Muezzins,
         )
 
         DefaultAdhanEntryId.MoazenZade.key -> AudioEntry.ResourceAudioEntry(
             DefaultAdhanEntryId.MoazenZade.key,
             R.raw.moazen_zade,
             R.string.moazen_zade,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.MasjidAlHaram.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MasjidAlHaram.key,
+            R.raw.silence,
+            R.string.masjid_al_haram,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.MasjidAlAqsa.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MasjidAlAqsa.key,
+            R.raw.silence,
+            R.string.masjid_al_aqsa,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.AlAzhar.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.AlAzhar.key,
+            R.raw.silence,
+            R.string.al_azhar,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.Suleymaniye.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.Suleymaniye.key,
+            R.raw.silence,
+            R.string.suleymaniye,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.MasjidAlNabawiOld.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MasjidAlNabawiOld.key,
+            R.raw.silence,
+            R.string.masjid_al_nabawi_old,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.SheikhZayedGrand.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.SheikhZayedGrand.key,
+            R.raw.silence,
+            R.string.sheikh_zayed_grand,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.HassanIi.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.HassanIi.key,
+            R.raw.silence,
+            R.string.hassan_ii,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.ProphetMosqueMadinah.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.ProphetMosqueMadinah.key,
+            R.raw.silence,
+            R.string.prophet_mosque_madinah,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.PutraMosque.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.PutraMosque.key,
+            R.raw.silence,
+            R.string.putra_mosque,
+            AdhanCategory.Mosques,
+        )
+
+        DefaultAdhanEntryId.MisharyAlafasy.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MisharyAlafasy.key,
+            R.raw.silence,
+            R.string.mishary_alafasy,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.AbdulRahmanSudais.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.AbdulRahmanSudais.key,
+            R.raw.silence,
+            R.string.abdulrahman_sudais,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.SaadAlGhamdi.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.SaadAlGhamdi.key,
+            R.raw.silence,
+            R.string.saad_al_ghamdi,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.MasharyRashidAlafasy.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MasharyRashidAlafasy.key,
+            R.raw.silence,
+            R.string.mashary_rashid_alafasy,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.MaherAlMuaiqly.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MaherAlMuaiqly.key,
+            R.raw.silence,
+            R.string.maher_al_muaiqly,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.BandarBalilah.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.BandarBalilah.key,
+            R.raw.silence,
+            R.string.bandar_balilah,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.AliAhmedMulla.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.AliAhmedMulla.key,
+            R.raw.silence,
+            R.string.ali_ahmed_mulla,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.MuhammadAlLuhaidan.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MuhammadAlLuhaidan.key,
+            R.raw.silence,
+            R.string.muhammad_al_luhaidan,
+            AdhanCategory.Muezzins,
+        )
+
+        DefaultAdhanEntryId.EgyptianStyle.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.EgyptianStyle.key,
+            R.raw.silence,
+            R.string.egyptian_style,
+            AdhanCategory.Styles,
+        )
+
+        DefaultAdhanEntryId.TurkishStyle.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.TurkishStyle.key,
+            R.raw.silence,
+            R.string.turkish_style,
+            AdhanCategory.Styles,
+        )
+
+        DefaultAdhanEntryId.MoroccanStyle.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.MoroccanStyle.key,
+            R.raw.silence,
+            R.string.moroccan_style,
+            AdhanCategory.Styles,
+        )
+
+        DefaultAdhanEntryId.HijazStyle.key -> AudioEntry.ResourceAudioEntry(
+            DefaultAdhanEntryId.HijazStyle.key,
+            R.raw.silence,
+            R.string.hijaz_style,
+            AdhanCategory.Styles,
         )
 
         else -> null
     }
 
 fun getDefaultAdhanEntries(): List<AudioEntry.ResourceAudioEntry> =
-    listOf(
-        mapAdhanIdToEntry(DefaultAdhanEntryId.MasjidAnNabawi.key),
-        mapAdhanIdToEntry(DefaultAdhanEntryId.AbdulBasitAbduSamad.key),
-        mapAdhanIdToEntry(DefaultAdhanEntryId.RaghebMustafaGhalwash.key),
-        mapAdhanIdToEntry(DefaultAdhanEntryId.MoazenZade.key),
-    )
+    DefaultAdhanEntryId.entries.map { mapAdhanIdToEntry(it.key) }
 
 @Serializable
 data class Settings(
     val deliveredAlarmTimestamps: Map<String, Long?> = emptyMap(),
     val themeColor: ThemeColor = ThemeColor.Default,
+    /**
+     * Optional user-picked ARGB seed color applied on top of [themeColor] when it equals
+     * [ThemeColor.Dynamic] (Material You override) or [ThemeColor.Default] (pre-Android 12 fallback).
+     * Null disables the custom seed; on Android 12+ the OS dynamic scheme wins unless this is set.
+     */
+    val customSeedColor: Int? = null,
     val is24HourFormat: Boolean = true,
     /** App-wide UI scale multiplier (text + interface) applied on top of the system density. 1f = no change. */
     val displayScale: Float = 1f,
@@ -296,6 +484,9 @@ enum class ThemeColor {
     @SerialName("dark")
     Dark,
 
+    @SerialName("amoled")
+    Amoled,
+
     @SerialName("classic_light")
     ClassicLight,
 
@@ -313,10 +504,12 @@ enum class ThemeColor {
             else -> false
         }
 
+    fun isAmoled(): Boolean = this == Amoled
+
     @Composable
     fun isDark(): Boolean =
         when (this) {
-            ClassicDark, Dark -> true
+            ClassicDark, Dark, Amoled -> true
             Dynamic -> isSystemInDarkTheme()
             else -> false
         }
@@ -332,6 +525,12 @@ sealed interface AudioEntry {
         override val id: String,
         @param:RawRes val resId: Int? = null,
         @param:StringRes val labelResId: Int = R.string.unknown,
+        /**
+         * Coarse grouping surfaced in the picker UI; null for the synthetic silent/notification
+         * entries. Category-based sorting/grouping keeps the picker usable as the bundled catalog
+         * grows beyond a dozen reciters.
+         */
+        val category: AdhanCategory? = null,
     ) : AudioEntry {
         override val loop: Boolean = false
         val canDelete: Boolean = false
@@ -354,6 +553,18 @@ sealed interface AudioEntry {
             is ExternalAudioEntry -> this.label
         }
 }
+
+/**
+ * Picks the [AdhanCategory] of a bundled entry, or null for the silent/notification entries and
+ * user-imported external audio. Lets the adhan picker group user-imported tracks under a single
+ * "Custom" bucket alongside the bundled mosques/muezzins/styles while still letting the silent
+ * notification entry render ungrouped.
+ */
+fun AudioEntry.getCategory(): AdhanCategory? =
+    when (this) {
+        is AudioEntry.ResourceAudioEntry -> this.category
+        is AudioEntry.ExternalAudioEntry -> null
+    }
 
 /**
  * Whether this entry can actually resolve to a playable sound. A [AudioEntry.ResourceAudioEntry] with

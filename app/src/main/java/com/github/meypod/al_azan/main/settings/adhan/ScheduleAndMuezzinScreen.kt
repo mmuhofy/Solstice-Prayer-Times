@@ -24,8 +24,10 @@ import com.github.meypod.al_azan.core.domain.model.adhan.AdhanKey
 import com.github.meypod.al_azan.core.domain.model.adhan.Prayer
 import com.github.meypod.al_azan.core.domain.model.adhan.SHARIA_TIMES_IN_ORDER
 import com.github.meypod.al_azan.core.domain.model.settings.AudioEntry
+import com.github.meypod.al_azan.core.domain.model.settings.AdhanCategory
 import com.github.meypod.al_azan.core.domain.model.settings.NOTIFICATION_AUDIO_ID
 import com.github.meypod.al_azan.core.domain.model.settings.SILENT_AUDIO_ID
+import com.github.meypod.al_azan.core.domain.model.settings.getCategory
 import com.github.meypod.al_azan.core.domain.model.settings.mapAdhanIdToEntry
 import com.github.meypod.al_azan.core.presentation.AlAzanTheme
 import com.github.meypod.al_azan.core.presentation.components.ACard
@@ -87,8 +89,21 @@ private fun MuezzinPicker(
                 optionKey = { it.id },
                 optionLabel = audioEntryLabel(),
                 optionCanDelete = { it.id in userIds },
-                // The silent track has nothing to hear — show a static volume-off icon instead of a play button.
-                optionPreviewable = { it.id != SILENT_AUDIO_ID },
+                // Placeholder entries still resolve to silence.wav; suppress preview + label them so the
+                // user knows the audio file is pending bundling rather than previewing nothing useful.
+                optionSubtitle = { entry ->
+                    if (entry is AudioEntry.ResourceAudioEntry &&
+                        entry.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) &&
+                        entry.resId == R.raw.silence
+                    ) {
+                        stringResource(R.string.adhan_preview_placeholder)
+                    } else null
+                },
+                optionPreviewable = { entry ->
+                    if (entry.id == SILENT_AUDIO_ID) return@AudioPickerField false
+                    val resource = entry as? AudioEntry.ResourceAudioEntry ?: return@AudioPickerField true
+                    resource.id !in setOf(SILENT_AUDIO_ID, NOTIFICATION_AUDIO_ID) && resource.resId != R.raw.silence
+                },
                 optionLeadingIcon = { R.drawable.outline_volume_off.takeIf { _ -> it.id == SILENT_AUDIO_ID } },
                 onSelect = { onAction(AdhanSettingsUiAction.OnGlobalMuezzinSelect(it)) },
                 onPreview = { onAction(AdhanSettingsUiAction.OnPreviewAudio(it)) },
@@ -168,20 +183,45 @@ private fun AdhanAndNotificationCard(
     }
 }
 
-/** Muezzins + your sounds + device sounds, grouped for the picker sheet. */
+/** Muezzins grouped by [AdhanCategory] (Mosques / Muezzins / Styles), plus your sounds and device
+ *  sounds. The bundled catalog grew from 4 to 25+ reciters so flat grouping is no longer usable;
+ *  category sections keep the picker readable. */
 @Composable
-internal fun muezzinSections(uiState: AdhanSettingsUiState): List<AudioPickerSection<AudioEntry>> =
-    listOf(
-        AudioPickerSection(
-            null,
-            listOf(mapAdhanIdToEntry(NOTIFICATION_AUDIO_ID), mapAdhanIdToEntry(SILENT_AUDIO_ID)),
-        ),
-        AudioPickerSection(stringResource(R.string.muezzin), uiState.settings.savedAdhanAudioEntries),
-        AudioPickerSection(stringResource(R.string.your_sounds), uiState.settings.savedUserAudioEntries),
-        AudioPickerSection(stringResource(R.string.device_sounds), uiState.deviceSounds),
-    )
+internal fun muezzinSections(uiState: AdhanSettingsUiState): List<AudioPickerSection<AudioEntry>> {
+    val mosquesLabel = stringResource(R.string.adhan_category_mosques)
+    val muezzinsLabel = stringResource(R.string.adhan_category_muezzins)
+    val stylesLabel = stringResource(R.string.adhan_category_styles)
+    val yourSoundsLabel = stringResource(R.string.your_sounds)
+    val deviceSoundsLabel = stringResource(R.string.device_sounds)
 
-/** Resolves an [AudioEntry] label (resource string or user label), suffixing looping device sounds. */
+    // Partition bundled entries by their category. Stable iteration order matches
+    // AdhanCategory's declaration (Mosques, Muezzins, Styles) so the sheet reads top-to-bottom.
+    val byCategory = uiState.settings.savedAdhanAudioEntries
+        .filterIsInstance<AudioEntry.ResourceAudioEntry>()
+        .groupBy { it.category ?: AdhanCategory.Mosques }
+
+    return buildList {
+        add(
+            AudioPickerSection(
+                null,
+                listOf(mapAdhanIdToEntry(NOTIFICATION_AUDIO_ID), mapAdhanIdToEntry(SILENT_AUDIO_ID)),
+            ),
+        )
+        byCategory[AdhanCategory.Mosques]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(mosquesLabel, it))
+        }
+        byCategory[AdhanCategory.Muezzins]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(muezzinsLabel, it))
+        }
+        byCategory[AdhanCategory.Styles]?.takeIf { it.isNotEmpty() }?.let {
+            add(AudioPickerSection(stylesLabel, it))
+        }
+        add(AudioPickerSection(yourSoundsLabel, uiState.settings.savedUserAudioEntries))
+        add(AudioPickerSection(deviceSoundsLabel, uiState.deviceSounds))
+    }
+}
+
+/** Convenience: a Composable wrapper that additionally pulls the resources/repeat string. */
 @Composable
 internal fun audioEntryLabel(): (AudioEntry) -> String {
     val resources = LocalResources.current

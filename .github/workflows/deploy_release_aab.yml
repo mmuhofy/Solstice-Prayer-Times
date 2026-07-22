@@ -68,8 +68,8 @@ jobs:
       run: |
         set -euo pipefail
         aab=$(ls dist/*.aab | head -n1)
-        fastlane supply \
-          --package_name com.github.meypod.al_azan \
+          fastlane supply \
+            --package_name com.solstice.prayers \
           --aab "$aab" \
           --skip_upload_metadata true \
           --skip_upload_images true \

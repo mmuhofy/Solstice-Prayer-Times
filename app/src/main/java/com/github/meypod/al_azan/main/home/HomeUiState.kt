@@ -29,6 +29,9 @@ data class HomeUiState(
     val highlightedShariaTime: ShariaTimeDetails? = null,
     val countdownText: String = "--:--:--",
     val is24Hour: Boolean = true,
+    /** Fraction of the current interval between the previous and next prayer (0..1) for the
+     *  hero progress arc. 0 = current prayer just begun, 1 = next prayer is imminently due. */
+    val elapsedFractionOfPrayerInterval: Float = 0f,
     val hiddenPrayers: List<Prayer> = emptyList(),
     val skippedPrayers: Set<Prayer> = emptySet(),
     val isDeveloper: Boolean = false,

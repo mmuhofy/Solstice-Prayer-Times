@@ -42,6 +42,9 @@ class InterfaceSettingsViewModel @Inject constructor(
 
             is InterfaceSettingsUiAction.OnThemeChange -> onThemeChange(action)
 
+            is InterfaceSettingsUiAction.OnCustomSeedColorChange ->
+                update { it.copy(customSeedColor = action.value) }
+
             is InterfaceSettingsUiAction.OnDisplayScaleChange ->
                 update { it.copy(displayScale = action.value) }
 

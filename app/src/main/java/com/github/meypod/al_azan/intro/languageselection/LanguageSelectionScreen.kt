@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.github.meypod.al_azan.R
+import com.github.meypod.al_azan.core.domain.model.settings.SupportedLocale
 import com.github.meypod.al_azan.core.domain.model.settings.SupportedLocales
 import com.github.meypod.al_azan.core.presentation.AlAzanTheme
 import com.github.meypod.al_azan.core.presentation.components.BottomSelect
@@ -165,11 +166,12 @@ fun LanguageSelectionScreen(
 
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                val localeLabel: (SupportedLocale) -> String = { it.label }
                 BottomSelect(
                     modifier = Modifier.widthIn(min = 280.dp),
                     options = SupportedLocales,
                     optionKey = { it.value },
-                    optionLabel = { it.label },
+                    optionLabel = localeLabel,
                     optionSearchTag = { it.tags },
                     selectedKey = selectedLanguage.value,
                     onSelect = { onAction(LanguageSelectionUiAction.OnLanguageSelected(it.value)) },

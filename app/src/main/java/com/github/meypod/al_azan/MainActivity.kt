@@ -7,7 +7,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import com.github.meypod.al_azan.core.domain.model.settings.Settings
 import com.github.meypod.al_azan.core.domain.repository.SettingsRepository
 import com.github.meypod.al_azan.core.presentation.AlAzanTheme
 import com.github.meypod.al_azan.core.presentation.navigation.NavigationController
@@ -17,7 +21,9 @@ import com.github.meypod.al_azan.core.presentation.navigation.deepLinkPatterns
 import com.github.meypod.al_azan.core.presentation.navigation.deeplink.parseUriToRoute
 import com.github.meypod.al_azan.di.LanguageSync
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,27 +35,41 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var languageSync: LanguageSync
 
+    // Holds the settings loaded during onCreate; null while the background load is in flight.
+    // Observed by setContent via mutableStateOf, so the UI renders once data is ready.
+    private var initialSettings: Settings? by mutableStateOf(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Reconcile the app locale with stored settings before composing: applies the migrated/selected
-        // language and its layout direction (RTL). Done here (not Application.onCreate) so it lands at
-        // the lifecycle point where autoStoreLocales actually persists setApplicationLocales.
-        val initialSettings = runBlocking {
-            languageSync.reconcile()
-            settingsRepository.fetch()
-        }
+
+        // Keep the splash screen visible until the initial settings load completes on the IO
+        // dispatcher; replaces runBlocking so the main thread is not blocked during launch.
+        splashScreen.setKeepOnScreenCondition { initialSettings == null }
 
         val startingRoute = routeFromIntent(intent)
         intent = null // consume
 
-        setContent {
-            val settings by settingsRepository.data.collectAsState(initial = initialSettings)
+        // Reconcile the app locale with stored settings before composing: applies the migrated/
+        // selected language and its layout direction (RTL). Done here (not Application.onCreate) so
+        // it lands at the lifecycle point where autoStoreLocales actually persists
+        // setApplicationLocales. Run on IO to avoid blocking the main thread.
+        lifecycleScope.launch {
+            val settings = withContext(Dispatchers.IO) {
+                languageSync.reconcile()
+                settingsRepository.fetch()
+            }
+            initialSettings = settings
+        }
 
-            AlAzanTheme(settings.themeColor, settings.displayScale) {
+        setContent {
+            val initial = initialSettings ?: return@setContent
+            val settings by settingsRepository.data.collectAsState(initial = initial)
+
+            AlAzanTheme(settings.themeColor, settings.displayScale, settings.customSeedColor) {
                 NavigationRoot(
-                    appIntroDone = initialSettings.appIntroDone,
+                    appIntroDone = initial.appIntroDone,
                     startingRoute = startingRoute,
                 )
             }

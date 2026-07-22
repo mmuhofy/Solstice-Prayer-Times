@@ -4,12 +4,13 @@ import androidx.compose.runtime.Immutable
 import com.github.meypod.al_azan.core.presentation.navigation.Route
 
 private val introSteps = listOf(
+    // Streamlined 4-step onboarding: language → location → calculation → adhan.
+    // - Restore backup moved to Settings → Backup & Restore (optional, post-onboarding)
+    // - Troubleshoot moved to Settings → Troubleshoot (post-onboarding, surfaces when needed)
     Route.Intro.LanguageSelection,
-    Route.Intro.RestoreBackup,
     Route.Intro.Location,
     Route.Intro.Calculation,
     Route.Intro.Adhan,
-    Route.Intro.Troubleshoot,
 )
 
 @Immutable
