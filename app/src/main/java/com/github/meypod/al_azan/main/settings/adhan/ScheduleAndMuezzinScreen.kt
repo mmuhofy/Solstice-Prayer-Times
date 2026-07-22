@@ -221,19 +221,6 @@ internal fun muezzinSections(uiState: AdhanSettingsUiState): List<AudioPickerSec
     }
 }
 
-/** Same as [audioEntryLabel] but takes the already-resolved [repeatSuffix] so the resulting closure
- *  is non-composable and can be passed to lambdas that don't accept a @Composable facade. */
-internal fun audioEntryLabel(repeatSuffix: String): (AudioEntry) -> String {
-    return { entry ->
-        val resources = entry.resources
-        val base = when (entry) {
-            is AudioEntry.ResourceAudioEntry -> resources.getString(entry.labelResId)
-            is ExternalAudioEntry -> entry.label
-        }
-        if (entry.loop) "$base ($repeatSuffix)" else base
-    }
-}
-
 /** Convenience: a Composable wrapper that additionally pulls the resources/repeat string. */
 @Composable
 internal fun audioEntryLabel(): (AudioEntry) -> String {
@@ -242,11 +229,8 @@ internal fun audioEntryLabel(): (AudioEntry) -> String {
     return { entry ->
         val base = when (entry) {
             is AudioEntry.ResourceAudioEntry -> resources.getString(entry.labelResId)
-            is ExternalAudioEntry -> entry.label
+            is AudioEntry.ExternalAudioEntry -> entry.label
         }
-        if (entry.loop) "$base ($repeat)" else base
-    }
-}
         if (entry.loop) "$base ($repeat)" else base
     }
 }
