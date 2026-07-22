@@ -24,10 +24,29 @@ class RingtoneRepositoryImpl(
     override suspend fun getDeviceRingtones(): List<DeviceRingtone> =
         withContext(Dispatchers.IO) {
             val seen = HashSet<String>()
+            // Local lambda so the shared dedup `seen` set is captured lexically, keeping
+            // MutableSet out of any function signature (banMutableCollectionTypes lint rule).
+            fun collectType(type: Int): ArrayList<BaseSound> {
+                val out = ArrayList<BaseSound>()
+                try {
+                    val manager = RingtoneManager(context).apply { setType(type) }
+                    val cursor = manager.cursor
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(RingtoneManager.ID_COLUMN_INDEX).toString()
+                        val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX) ?: continue
+                        val uri = manager.getRingtoneUri(cursor.position)?.toString() ?: continue
+                        if (!seen.add(uri)) continue
+                        out.add(BaseSound(id = "ringtone_$id", label = title, uri = uri))
+                    }
+                } catch (_: Exception) {
+                    // A locked-down OEM or storage error shouldn't break the picker; skip this type.
+                }
+                return out
+            }
             val base = buildList {
-                collectType(RingtoneManager.TYPE_NOTIFICATION, seen, this)
-                collectType(RingtoneManager.TYPE_ALARM, seen, this)
-                collectType(RingtoneManager.TYPE_RINGTONE, seen, this)
+                addAll(collectType(RingtoneManager.TYPE_NOTIFICATION))
+                addAll(collectType(RingtoneManager.TYPE_ALARM))
+                addAll(collectType(RingtoneManager.TYPE_RINGTONE))
             }
             base.flatMap { sound ->
                 listOf(
@@ -36,24 +55,4 @@ class RingtoneRepositoryImpl(
                 )
             }
         }
-
-    private fun collectType(
-        type: Int,
-        seen: MutableSet<String>,
-        out: MutableList<BaseSound>,
-    ) {
-        try {
-            val manager = RingtoneManager(context).apply { setType(type) }
-            val cursor = manager.cursor
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(RingtoneManager.ID_COLUMN_INDEX).toString()
-                val title = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX) ?: continue
-                val uri = manager.getRingtoneUri(cursor.position)?.toString() ?: continue
-                if (!seen.add(uri)) continue
-                out.add(BaseSound(id = "ringtone_$id", label = title, uri = uri))
-            }
-        } catch (_: Exception) {
-            // A locked-down OEM or storage error shouldn't break the picker; skip this type.
-        }
-    }
 }
